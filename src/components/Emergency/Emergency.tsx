@@ -153,238 +153,195 @@ const Emergency: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-900 pb-8">
+    <div className="min-h-screen bg-black relative overflow-hidden">
+      {/* Background gradient overlay */}
+      <div className="absolute inset-0 bg-gradient-to-b from-black via-gray-900/20 to-black" />
+      
       <Navbar currentTime={currentTime} currentUser={currentUser} />
 
-      <main className="container mx-auto px-4 pt-20">
-        {/* Title Section */}
-        <div className="text-center mb-12">
-          <h1 className="text-3xl font-light text-white mb-3">Emergency Services</h1>
-          <p className="text-gray-400 text-sm">24/7 Support & Immediate Assistance</p>
-          <p className="text-sm text-gray-500 mt-2">
-            {currentTime} UTC | User: {currentUser}
-          </p>
+      <main className="container mx-auto px-4 pt-16 relative z-10">
+        {/* Emergency Header */}
+        <div className="text-center mb-8">
+          <h1 className="text-5xl md:text-6xl font-['Syncopate'] text-white mb-4">
+            EMERGENCY
+          </h1>
+          <div className="text-red-500 animate-pulse text-lg mb-2">
+            24/7 Immediate Assistance
+          </div>
         </div>
 
-        <div className="grid gap-6 mb-6">
-          {/* Emergency Buttons */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        {/* Primary Emergency Actions - Always Visible */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={() => makeEmergencyCall('112')}
+            className="bg-red-500/20 hover:bg-red-500/30 text-white p-6 rounded-xl 
+                       flex items-center justify-center space-x-4 border-2 border-red-500/50"
+          >
+            <span className="text-4xl">🆘</span>
+            <div className="text-left">
+              <div className="text-2xl font-bold">Emergency - 112</div>
+              <div className="text-red-300">Tap to Call Now</div>
+            </div>
+          </motion.button>
+
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={() => makeEmergencyCall('1091')}
+            className="bg-purple-500/20 hover:bg-purple-500/30 text-white p-6 rounded-xl 
+                       flex items-center justify-center space-x-4 border-2 border-purple-500/50"
+          >
+            <span className="text-4xl">👮‍♀️</span>
+            <div className="text-left">
+              <div className="text-2xl font-bold">Women Helpline - 1091</div>
+              <div className="text-purple-300">Immediate Assistance</div>
+            </div>
+          </motion.button>
+        </div>
+
+        {/* Quick Access Emergency Services */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-8">
+          {[
+            { name: 'Police', number: '100', icon: '👮' },
+            { name: 'Ambulance', number: '108', icon: '🚑' },
+            { name: 'Fire', number: '101', icon: '🚒' },
+          ].map((service) => (
             <motion.button
+              key={service.name}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              onClick={handleLocationEmergency}
-              className="bg-red-500/10 hover:bg-red-500/20 text-red-400 p-4 rounded-lg flex items-center justify-center space-x-3 text-sm font-medium border border-red-500/20"
+              onClick={() => makeEmergencyCall(service.number)}
+              className="bg-gray-800/40 backdrop-blur-sm p-4 rounded-xl border border-gray-700/50
+                         hover:bg-gray-800/60 transition-all duration-300"
             >
-              <span className="text-xl">🆘</span>
-              <span>Emergency Call ({EMERGENCY_CONTACT})</span>
+              <div className="text-2xl mb-2">{service.icon}</div>
+              <div className="text-white font-medium">{service.name}</div>
+              <div className="text-blue-400">{service.number}</div>
             </motion.button>
+          ))}
+        </div>
 
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={handleWomenChildrenEmergency}
-              className="bg-purple-500/10 hover:bg-purple-500/20 text-purple-400 p-4 rounded-lg flex items-center justify-center space-x-3 text-sm font-medium border border-purple-500/20"
+        {/* Location Map */}
+        <div className="bg-gray-800/40 backdrop-blur-sm rounded-xl p-4 mb-8 border border-gray-700/50">
+          <h2 className="text-xl font-['Syncopate'] text-white mb-4">
+            NEARBY SERVICES
+          </h2>
+          <LoadScript googleMapsApiKey={GOOGLE_MAPS_API_KEY} libraries={['places']}>
+            <GoogleMap
+              mapContainerStyle={{
+                width: '100%',
+                height: '400px',
+                borderRadius: '0.75rem'
+              }}
+              center={center}
+              zoom={14}
+              onLoad={onMapLoad}
+              options={{
+                styles: mapStyles,
+                zoomControl: true,
+                mapTypeControl: false,
+                streetViewControl: false,
+                fullscreenControl: true,
+              }}
             >
-              <span className="text-xl">👧</span>
-              <span>Women & Children Emergency</span>
-            </motion.button>
-          </div>
+              {currentLocation && (
+                <Marker
+                  position={currentLocation}
+                  icon={{
+                    url: 'http://maps.google.com/mapfiles/ms/icons/blue-dot.png'
+                  }}
+                />
+              )}
 
-          {/* Alert Messages */}
-          {(showLocationAlert || showEmergencyAlert) && (
-            <motion.div
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="bg-green-500/20 border border-green-500/40 rounded-lg p-4"
-            >
-              <p className="text-green-400">
-                {showLocationAlert ? 'Connecting emergency call...' : 'Emergency alert sent!'}
-                {currentLocation && showLocationAlert && (
-                  <span className="block text-sm mt-1">
-                    Location: {currentLocation.lat.toFixed(6)}, {currentLocation.lng.toFixed(6)}
-                  </span>
-                )}
-              </p>
-            </motion.div>
-          )}
+              {nearbyPlaces.map((place: Place) => (
+                <Marker
+                  key={place.place_id}
+                  position={{
+                    lat: place.geometry.location.lat(),
+                    lng: place.geometry.location.lng()
+                  }}
+                  onClick={() => setSelectedPlace(place)}
+                  icon={{
+                    url: `http://maps.google.com/mapfiles/ms/icons/${
+                      place.type === 'hospital' ? 'red' :
+                      place.type === 'police' ? 'blue' : 'yellow'
+                    }-dot.png`
+                  }}
+                />
+              ))}
 
-          {/* Map Section */}
-          <div className="bg-gray-800 rounded-lg p-4">
-            <h2 className="text-xl font-light text-white mb-6">Your Location & Nearby Services</h2>
-            <LoadScript googleMapsApiKey={GOOGLE_MAPS_API_KEY} libraries={['places']}>
-              <GoogleMap
-                mapContainerStyle={mapContainerStyle}
-                center={center}
-                zoom={14}
-                onLoad={onMapLoad}
-                options={{
-                  styles: mapStyles,
-                  zoomControl: true,
-                  mapTypeControl: false,
-                  streetViewControl: false,
-                  fullscreenControl: true,
-                }}
-              >
-                {currentLocation && (
-                  <Marker
-                    position={currentLocation}
-                    icon={{
-                      url: 'http://maps.google.com/mapfiles/ms/icons/blue-dot.png'
-                    }}
-                  />
-                )}
-
-                {nearbyPlaces.map((place: Place) => (
-                  <Marker
-                    key={place.place_id}
-                    position={{
-                      lat: place.geometry.location.lat(),
-                      lng: place.geometry.location.lng()
-                    }}
-                    onClick={() => setSelectedPlace(place)}
-                    icon={{
-                      url: `http://maps.google.com/mapfiles/ms/icons/${
-                        place.type === 'hospital' ? 'red' :
-                        place.type === 'police' ? 'blue' : 'yellow'
-                      }-dot.png`
-                    }}
-                  />
-                ))}
-
-                {selectedPlace && (
-                  <InfoWindow
-                    position={{
-                      lat: selectedPlace.geometry.location.lat(),
-                      lng: selectedPlace.geometry.location.lng()
-                    }}
-                    onCloseClick={() => setSelectedPlace(null)}
-                  >
-                    <div className="bg-white p-2 rounded-sm">
-                      <h3 className="font-bold">{selectedPlace.name}</h3>
-                      <p className="text-sm">{selectedPlace.vicinity}</p>
-                      <button
-                        onClick={() => {
-                          const url = `https://www.google.com/maps/dir/?api=1&destination=${selectedPlace.geometry.location.lat()},${selectedPlace.geometry.location.lng()}`;
-                          window.open(url, '_blank');
-                        }}
-                        className="mt-2 text-blue-600 text-sm hover:underline"
-                      >
-                        Get Directions
-                      </button>
-                    </div>
-                  </InfoWindow>
-                )}
-              </GoogleMap>
-            </LoadScript>
-          </div>
-
-          {/* Emergency Services Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            {['Police', 'Ambulance', 'Fire'].map((service, index) => (
-              <motion.div
-                key={service}
-                whileHover={{ scale: 1.02 }}
-                className="bg-gray-800/50 backdrop-blur-sm p-6 rounded-lg border border-gray-700/50"
-              >
-                <h3 className="text-base font-light text-white mb-2">{service}</h3>
-                <p className="text-gray-400 text-sm mb-4">
-                  Emergency: {index === 0 ? '100' : index === 1 ? '108' : '101'}
-                </p>
-                <button
-                  onClick={() => makeEmergencyCall(index === 0 ? '100' : index === 1 ? '108' : '101')}
-                  className="w-full bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 py-2 rounded text-sm font-medium border border-blue-500/20"
+              {selectedPlace && (
+                <InfoWindow
+                  position={{
+                    lat: selectedPlace.geometry.location.lat(),
+                    lng: selectedPlace.geometry.location.lng()
+                  }}
+                  onCloseClick={() => setSelectedPlace(null)}
                 >
-                  Call Now
-                </button>
-              </motion.div>
-            ))}
+                  <div className="bg-white p-2 rounded-sm">
+                    <h3 className="font-bold">{selectedPlace.name}</h3>
+                    <p className="text-sm">{selectedPlace.vicinity}</p>
+                    <button
+                      onClick={() => {
+                        const url = `https://www.google.com/maps/dir/?api=1&destination=${selectedPlace.geometry.location.lat()},${selectedPlace.geometry.location.lng()}`;
+                        window.open(url, '_blank');
+                      }}
+                      className="mt-2 text-blue-600 text-sm hover:underline"
+                    >
+                      Get Directions
+                    </button>
+                  </div>
+                </InfoWindow>
+              )}
+            </GoogleMap>
+          </LoadScript>
+        </div>
+
+        {/* Contact Information - Collapsed by default on mobile */}
+        <details className="bg-gray-800/40 backdrop-blur-sm rounded-xl p-4 border border-gray-700/50 mb-8">
+          <summary className="text-xl font-['Syncopate'] text-white cursor-pointer">
+            IMPORTANT CONTACTS
+          </summary>
+          <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4 text-gray-300">
+            <div>
+              <h3 className="text-blue-400 mb-2">Emergency Contacts</h3>
+              <ul className="space-y-2">
+                <li>National Emergency: 112</li>
+                <li>Women Helpline: 1091</li>
+                <li>Child Helpline: 1098</li>
+              </ul>
+            </div>
+            <div>
+              <h3 className="text-blue-400 mb-2">Local Support</h3>
+              <ul className="space-y-2">
+                <li>Local Police: {EMERGENCY_CONTACT}</li>
+                <li>Hospital: 108</li>
+                <li>Fire Station: 101</li>
+              </ul>
+            </div>
           </div>
-        </div>
+        </details>
 
-        {/* About Us Section */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="bg-gray-800/50 backdrop-blur-sm p-6 rounded-lg mb-8 border border-gray-700/50"
-        >
-          <h2 className="text-xl font-light text-white mb-4">About Our Services</h2>
-          <p className="text-gray-400 text-sm leading-relaxed">
-            Atlantis Women's Safety Initiative provides 24/7 emergency support and protection services
-            for women in distress. Our team of trained professionals ensures immediate response and
-            assistance whenever needed.
-          </p>
-        </motion.div>
-
-        {/* Contact & Location Section */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        {/* Alert Messages */}
+        {(showLocationAlert || showEmergencyAlert) && (
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="bg-gray-800/50 backdrop-blur-sm p-6 rounded-lg border border-gray-700/50"
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="fixed bottom-4 right-4 bg-green-500/20 border border-green-500/40 
+                       rounded-lg p-4 max-w-md backdrop-blur-sm"
           >
-            <h2 className="text-xl font-light text-white mb-6">Contact Us</h2>
-            <div className="space-y-2 text-gray-300">
-              <p>Emergency: 1091 (Toll-Free)</p>
-              <p>Helpline: {EMERGENCY_CONTACT}</p>
-              <p>Email: help@atlantiswomensafety.org</p>
-            </div>
+            <p className="text-green-400">
+              {showLocationAlert ? 'Connecting emergency call...' : 'Emergency alert sent!'}
+              {currentLocation && showLocationAlert && (
+                <span className="block text-sm mt-1">
+                  Location: {currentLocation.lat.toFixed(6)}, {currentLocation.lng.toFixed(6)}
+                </span>
+              )}
+            </p>
           </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="bg-gray-800/50 backdrop-blur-sm p-6 rounded-lg border border-gray-700/50"
-          >
-            <h2 className="text-xl font-light text-white mb-4">Office Address</h2>
-            <address className="text-gray-300 not-italic">
-              Atlantis Women's Safety Center<br />
-              123 Safety Street, Koramangala<br />
-              Bangalore, Karnataka - 560034<br />
-              India
-            </address>
-          </motion.div>
-        </div>
-
-        {/* Email Us Section */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="bg-gray-800/50 backdrop-blur-sm p-6 rounded-lg border border-gray-700/50"
-        >
-          <h2 className="text-xl font-light text-white mb-6">Contact Us</h2>
-          <form className="space-y-6">
-            <div>
-              <label className="block text-gray-400 text-sm font-light mb-2">Name</label>
-              <input
-                type="text"
-                className="w-full bg-gray-700/50 text-white rounded-lg px-4 py-3 text-sm font-light border border-gray-600/50 focus:border-blue-500/50 focus:outline-none"
-                placeholder="Your Name"
-              />
-            </div>
-            <div>
-              <label className="block text-gray-400 text-sm font-light mb-2">Email</label>
-              <input
-                type="email"
-                className="w-full bg-gray-700/50 text-white rounded-lg px-4 py-3 text-sm font-light border border-gray-600/50 focus:border-blue-500/50 focus:outline-none"
-                placeholder="Your Email"
-              />
-            </div>
-            <div>
-              <label className="block text-gray-400 text-sm font-light mb-2">Message</label>
-              <textarea
-                rows={4}
-                className="w-full bg-gray-700/50 text-white rounded-lg px-4 py-3 text-sm font-light border border-gray-600/50 focus:border-blue-500/50 focus:outline-none"
-                placeholder="Your Message"
-              ></textarea>
-            </div>
-            <button
-              type="submit"
-              className="bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 px-6 py-3 rounded-lg text-sm font-medium border border-blue-500/20"
-            >
-              Send Message
-            </button>
-          </form>
-        </motion.div>
+        )}
       </main>
     </div>
   );

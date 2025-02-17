@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
-import { auth } from '../firebase/config';
+import { auth, db } from '../firebase/config';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 
 interface LoginProps {
   onClose: () => void;
@@ -14,6 +15,29 @@ const Login: React.FC<LoginProps> = ({ onClose }) => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
+  const checkAdminStatus = async (uid: string) => {
+    const adminDoc = await getDoc(doc(db, 'admins', uid));
+    return adminDoc.exists();
+  };
+
+  const handleLogin = async (user: any) => {
+    try {
+      const isAdmin = await checkAdminStatus(user.uid);
+      
+      // Update last login
+      const userRef = doc(db, isAdmin ? 'admins' : 'users', user.uid);
+      await setDoc(userRef, {
+        lastLogin: new Date()
+      }, { merge: true });
+
+      // Navigate based on role
+      navigate(isAdmin ? '/admin/dashboard' : '/home');
+    } catch (err) {
+      console.error('Error checking user role:', err);
+      setError('Error verifying user role');
+    }
+  };
+
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password) {
@@ -24,8 +48,8 @@ const Login: React.FC<LoginProps> = ({ onClose }) => {
     setError('');
 
     try {
-      await signInWithEmailAndPassword(auth, email, password);
-      navigate('/home'); // Changed to '/home'
+      const result = await signInWithEmailAndPassword(auth, email, password);
+      await handleLogin(result.user);
     } catch (err: any) {
       switch (err.code) {
         case 'auth/invalid-email':
@@ -51,8 +75,8 @@ const Login: React.FC<LoginProps> = ({ onClose }) => {
 
     try {
       const provider = new GoogleAuthProvider();
-      await signInWithPopup(auth, provider);
-      navigate('/home'); // Changed to '/home'
+      const result = await signInWithPopup(auth, provider);
+      await handleLogin(result.user);
     } catch (err: any) {
       if (err.code === 'auth/popup-closed-by-user') {
         setError('Sign in cancelled');
@@ -139,7 +163,7 @@ const Login: React.FC<LoginProps> = ({ onClose }) => {
                   : 'bg-blue-500/50 hover:bg-blue-500/60'
                 }
               `}
-            >
+            ></button>
               {loading ? 'Signing in...' : 'Sign In'}
             </button>
           </form>

@@ -8,3 +8,21 @@
       scrollbar-width: none;
     }
   }
+  .word-wrap {
+    overflow: hidden;
+    display: inline-block;
+    vertical-align: top;
+    padding: 0 0.05em;
+    margin: 0 -0.05em;
+  }
+  
+  .word {
+    display: inline-block;
+    will-change: transform;
+  }
+  
+  .char {
+    display: inline-block;
+    will-change: transform;
+    white-space: pre;
+  }

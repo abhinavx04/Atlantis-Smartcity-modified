@@ -1,11 +1,17 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { signOut, onAuthStateChanged } from 'firebase/auth';
-import { auth } from '../firebase/config';
+import { auth } from '../../firebase/config';
 import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
-import Navbar from './Navbar';  // Add this import
+import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import Navbar from '../Navbar';  // Add this import
 import AnimatedTagline from './AnimatedTagline';
+import Footer from './Footer';
+
+gsap.registerPlugin(ScrollTrigger);
+
 interface NewsItem {
   title: string;
   description: string;
@@ -33,58 +39,27 @@ const FALLBACK_IMAGE = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjQwIiBoZWlnaH
 const NewsCard: React.FC<{
   item: NewsItem;
   index: number;
-  active: number;
-  total: number;
-  onClick: () => void;
-}> = ({ item, index, active, total, onClick }) => {
-  const RADIUS = 800;
-  const ANGLE = 360 / Math.min(total, 8);
-  const rotation = (index - active) * ANGLE;
- 
-  const angleRad = (rotation * Math.PI) / 180;
-  const x = RADIUS * Math.sin(angleRad);
-  const z = RADIUS * Math.cos(angleRad) - RADIUS;
- 
-  const scale = mapRange(z, -RADIUS, 0, 0.7, 1);
-  const opacity = mapRange(z, -RADIUS, 0, 0.4, 1);
- 
+}> = ({ item, index }) => {
   return (
-    <motion.div
-      initial={false}
-      animate={{
-        x,
-        z,
-        rotateY: rotation,
-        scale,
-        opacity,
-      }}
-      transition={{
-        type: "spring",
-        stiffness: 90,
-        damping: 15,
-      }}
-      style={{
-        position: 'absolute',
-        width: '450px',
-        transformStyle: 'preserve-3d',
-        transformOrigin: 'center center',
-      }}
-      whileHover={{ 
-        scale: scale * 1.1,
-        transition: { duration: 0.2 }
-      }}
-      onClick={onClick}
+    <div
       className={`
-        bg-gray-800/90 backdrop-blur-sm rounded-xl overflow-hidden
-        border border-gray-700/50
+        news-card
+        flex-shrink-0
+        w-[400px]
+        bg-gray-800/90
+        backdrop-blur-sm
+        rounded-xl
+        overflow-hidden
+        border
+        border-gray-700/50
         shadow-[0_0_20px_rgba(0,0,0,0.3)]
-        transition-all duration-300 ease-out
+        transition-all
+        duration-300
+        ease-out
         hover:shadow-[0_0_30px_rgba(59,130,246,0.4)]
         hover:border-blue-500/30
-        ${Math.abs(rotation) < 90 ? 'pointer-events-auto' : 'pointer-events-none'}
       `}
     >
-      {/* Updated card content */}
       <div className="relative group">
         <div className="aspect-[16/9] w-full overflow-hidden">
           <img
@@ -97,180 +72,62 @@ const NewsCard: React.FC<{
             }}
           />
         </div>
-        <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-transparent to-black/30" />
-        <div className="absolute top-4 right-4">
-          {item.category !== 'all' && (
-            <span className="text-sm bg-blue-500/20 text-blue-400 px-3 py-1 rounded-full 
-                           backdrop-blur-sm border border-blue-500/20">
-              {item.category}
-            </span>
-          )}
-        </div>
-      </div>
- 
-      <div className="p-6 relative">
-        <div className="absolute left-0 top-0 w-[2px] h-full bg-gradient-to-b from-blue-500/0 via-blue-500/50 to-blue-500/0" />
- 
-        {/* Updated metadata section */}
-        <div className="flex items-center justify-between mb-3">
-          <span className="text-blue-400 text-sm font-medium flex items-center">
-            <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-              <path d="M10 2a8 8 0 100 16 8 8 0 000-16zm0 14a6 6 0 110-12 6 6 0 010 12z"/>
-            </svg>
-            {item.source.name}
-          </span>
-          <div className="flex items-center space-x-3">
-            {item.location && (
-              <span className="text-emerald-400 text-sm flex items-center">
-                <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd"/>
-                </svg>
-                {item.location}
-              </span>
-            )}
+        <div className="p-4">
+          <h3 className="font-['Syncopate'] text-lg font-semibold text-white mb-2 tracking-wide">
+            {item.title}
+          </h3>
+          <p className="text-gray-300 text-sm line-clamp-3">{item.description}</p>
+          <div className="mt-4 text-sm text-gray-400">
+            {new Date(item.publishedAt).toLocaleDateString()}
           </div>
         </div>
- 
-        <h3 className="text-xl text-white font-semibold mb-3 line-clamp-2">{item.title}</h3>
-        <p className="text-gray-400 mb-4 line-clamp-2">{item.description}</p>
- 
-        {/* Updated action buttons */}
-        <div className="flex justify-between items-center">
-          <button className="bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 px-4 py-2 rounded-lg 
-                           text-sm font-medium transition-all duration-300 flex items-center space-x-2
-                           border border-blue-500/20 hover:border-blue-500/40">
-            <span>Read More</span>
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3"/>
-            </svg>
-          </button>
-          <span className="text-gray-400 text-sm">
-            {new Date(item.publishedAt).toLocaleDateString()}
-          </span>
-        </div>
-      </div>
-    </motion.div>
-  );
-};
- 
-// Add circular positions constants
-const CIRCULAR_POSITIONS = [
-  { rotateY: 0, translateZ: 300, opacity: 1, scale: 1 },
-  { rotateY: 72, translateZ: 250, opacity: 0.7, scale: 0.9 },
-  { rotateY: 144, translateZ: 200, opacity: 0.5, scale: 0.8 },
-  { rotateY: 216, translateZ: 150, opacity: 0.4, scale: 0.7 },
-  { rotateY: 288, translateZ: 100, opacity: 0.3, scale: 0.6 },
-];
- 
-// Update the CarouselContainer component
-const CarouselContainer: React.FC<{
-  news: NewsItem[];
-  onSelectNews: (news: NewsItem) => void;
-}> = ({ news, onSelectNews }) => {
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [visibleNews, setVisibleNews] = useState(news.slice(0, 5));
- 
-  useEffect(() => {
-    setVisibleNews(news.slice(currentIndex, currentIndex + 5));
-  }, [currentIndex, news]);
- 
-  // Auto-scroll effect
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % Math.max(0, news.length - 4));
-    }, 3000);
- 
-    return () => clearInterval(interval);
-  }, [news.length]);
- 
-  // Add keyboard navigation
-  useEffect(() => {
-    const handleKeyPress = (e: KeyboardEvent) => {
-      if (e.key === 'ArrowRight') {
-        setCurrentIndex((prev) => (prev + 1) % Math.max(0, news.length - 4));
-      } else if (e.key === 'ArrowLeft') {
-        setCurrentIndex((prev) => 
-          prev === 0 ? Math.max(0, news.length - 5) : prev - 1
-        );
-      }
-    };
- 
-    window.addEventListener('keydown', handleKeyPress);
-    return () => window.removeEventListener('keydown', handleKeyPress);
-  }, [news.length]);
- 
-  return (
-    <div className="relative h-[600px] flex justify-center items-center">
-      <div className="relative w-[600px] h-[400px] perspective-1000">
-        <AnimatePresence>
-          {visibleNews.map((item, index) => {
-            const pos = CIRCULAR_POSITIONS[index];
-            return (
-              <motion.div
-                key={`${item.title}-${index}`}
-                className="absolute w-full h-full bg-gray-800 rounded-lg overflow-hidden shadow-lg cursor-pointer"
-                initial={{ opacity: 0 }}
-                animate={{
-                  rotateY: pos.rotateY,
-                  translateZ: pos.translateZ,
-                  opacity: pos.opacity,
-                  scale: pos.scale,
-                }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.8 }}
-                onClick={() => index === 0 && onSelectNews(item)}
-                style={{
-                  transformStyle: "preserve-3d",
-                  transformPerspective: 1000,
-                  filter: index === 0 ? "none" : "blur(2px)",
-                }}
-              >
-                <div className="relative h-full">
-                  {item.urlToImage && (
-                    <div className="h-1/2 overflow-hidden">
-                      <img
-                        src={item.urlToImage}
-                        alt={item.title}
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          const target = e.target as HTMLImageElement;
-                          target.src = 'https://via.placeholder.com/640x360?text=No+Image+Available';
-                        }}
-                      />
-                    </div>
-                  )}
-                  <div className="p-6 h-1/2">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-blue-400 text-sm">{item.source.name}</span>
-                      {item.location && (
-                        <span className="text-emerald-400 text-sm">📍 {item.location}</span>
-                      )}
-                    </div>
-                    <h3 className="text-xl text-white font-semibold mb-2 line-clamp-2">{item.title}</h3>
-                  </div>
-                </div>
-              </motion.div>
-            );
-          })}
-        </AnimatePresence>
-      </div>
- 
-      {/* Navigation dots */}
-      <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex space-x-2">
-        {Array.from({ length: Math.ceil(news.length / 5) }).map((_, index) => (
-          <button
-            key={index}
-            onClick={() => setCurrentIndex(index * 5)}
-            className={`w-2 h-2 rounded-full transition-all duration-300 ${
-              Math.floor(currentIndex / 5) === index ? 'bg-blue-500 w-4' : 'bg-gray-400'
-            }`}
-          />
-        ))}
       </div>
     </div>
   );
 };
+
+// Add circular positions constants
  
+// Update the CarouselContainer component
+ 
+const NewsHeading: React.FC = () => {
+  const headingRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (headingRef.current) {
+      gsap.fromTo(headingRef.current,
+        {
+          y: 50,
+          opacity: 0
+        },
+        {
+          y: 0,
+          opacity: 1,
+          duration: 1,
+          scrollTrigger: {
+            trigger: headingRef.current,
+            start: "top center+=200",
+            toggleActions: "play none none reverse"
+          }
+        }
+      );
+    }
+  }, []);
+
+  return (
+    <div 
+      ref={headingRef}
+      className="text-center mb-12"
+    >
+      <h2 className="font-['Syncopate'] text-4xl md:text-5xl lg:text-6xl font-bold bg-clip-text text-transparent 
+                     bg-gradient-to-r from-blue-500 via-blue-400 to-blue-600 tracking-wider uppercase">
+        Latest News
+      </h2>
+      <div className="w-24 h-1 bg-blue-500/50 mx-auto mt-4 rounded-full"></div>
+    </div>
+  );
+};
+
 const Home: React.FC = () => {
   const [news, setNews] = useState<NewsItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -278,6 +135,8 @@ const Home: React.FC = () => {
   const [activeIndex, setActiveIndex] = useState(0);
   const [selectedNews, setSelectedNews] = useState<NewsItem | null>(null);
   const [currentUser, setCurrentUser] = useState<string | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const trackRef = useRef<HTMLDivElement>(null);
 
   // Add auth listener
   useEffect(() => {
@@ -412,6 +271,60 @@ const Home: React.FC = () => {
   const filteredNews = news.filter(
     item => activeCategory === 'all' || item.category === activeCategory
   );
+
+  useEffect(() => {
+    if (containerRef.current && trackRef.current && filteredNews.length > 0) {
+      // Reset any existing ScrollTrigger instances
+      ScrollTrigger.getAll().forEach(st => st.kill());
+      
+      const track = trackRef.current;
+      const cards = track.children;
+      const totalWidth = (cards.length * 420) - window.innerWidth; // 400px card + 20px gap
+  
+      gsap.to(track, {
+        x: -totalWidth,
+        ease: "none",
+        scrollTrigger: {
+          trigger: containerRef.current,
+          start: "top top",
+          end: `+=${totalWidth}`,
+          pin: true,
+          scrub: 1,
+          anticipatePin: 1,
+          invalidateOnRefresh: true,
+          onUpdate: (self) => {
+            // Optional: Update card opacity based on position
+            Array.from(cards).forEach((card, i) => {
+              const progress = self.progress;
+              const cardProgress = (i / (cards.length - 1));
+              const distance = Math.abs(progress - cardProgress);
+              gsap.to(card, {
+                opacity: 1 - Math.min(distance * 2, 0.6),
+                duration: 0.2
+              });
+            });
+          }
+        }
+      });
+    }
+  }, [filteredNews]);
+ 
+  useEffect(() => {
+    if (containerRef.current) {
+      gsap.to(".news-container", {
+        y: 0,
+        opacity: 1,
+        stagger: 0.2,
+        ease: "power2.out",
+        scrollTrigger: {
+          trigger: containerRef.current,
+          start: "top center",
+          end: "bottom center",
+          toggleActions: "play none none reverse",
+        },
+      });
+    }
+  }, [filteredNews.length]);
  
   return (
     <div className="min-h-screen bg-black relative overflow-hidden">
@@ -495,6 +408,9 @@ const Home: React.FC = () => {
               </button>
             ))}
           </div>
+          
+          {/* Add the NewsHeading component */}
+          <NewsHeading />
         </div>
 
         {loading ? (
@@ -503,79 +419,44 @@ const Home: React.FC = () => {
             <p className="text-gray-400">Loading news...</p>
           </div>
         ) : filteredNews.length > 0 ? (
-          <>
+          <div ref={containerRef} className="relative w-full h-[80vh] overflow-hidden mb-16">
             <div 
-              className="relative h-[800px] w-full flex items-center justify-center overflow-hidden"
-              style={{
-                perspective: '2000px',
-                transformStyle: 'preserve-3d',
+              ref={trackRef}
+              className="absolute top-1/2 left-0 -translate-y-1/2 flex gap-5 pl-[10vw]"
+              style={{ 
+                willChange: 'transform',
+                paddingRight: '10vw' // Add right padding for last card
               }}
             >
               {filteredNews.map((item, index) => (
                 <NewsCard
-                  key={index}
+                  key={item.title + index}
                   item={item}
                   index={index}
-                  active={activeIndex}
-                  total={filteredNews.length}
-                  onClick={() => setSelectedNews(item)}
                 />
               ))}
             </div>
- 
-            <div className="mt-8 flex justify-center space-x-4">
-              <button
-                onClick={() => {
-                  setActiveIndex((prev) => {
-                    const newIndex = prev - 1;
-                    return newIndex < 0 ? filteredNews.length - 1 : newIndex;
-                  });
-                }}
-                className="group px-6 py-3 bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 rounded-full transition-colors flex items-center space-x-2"
-              >
-                <svg 
-                  className="w-5 h-5 transform group-hover:-translate-x-1 transition-transform" 
-                  fill="none" 
-                  stroke="currentColor" 
-                  viewBox="0 0 24 24"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                </svg>
-                <span>Previous</span>
-              </button>
- 
-              <button
-                onClick={() => {
-                  setActiveIndex((prev) => (prev + 1) % filteredNews.length);
-                }}
-                className="group px-6 py-3 bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 rounded-full transition-colors flex items-center space-x-2"
-              >
-                <span>Next</span>
-                <svg 
-                  className="w-5 h-5 transform group-hover:translate-x-1 transition-transform" 
-                  fill="none" 
-                  stroke="currentColor" 
-                  viewBox="0 0 24 24"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-              </button>
+            
+            <div className="absolute bottom-8 left-1/2 -translate-x-1/2 text-white/50 text-sm">
+              Scroll to explore more news
             </div>
-          </>
+          </div>
         ) : (
           <div className="flex flex-col items-center justify-center h-64">
             <p className="text-gray-400 text-lg">No news found for this category</p>
           </div>
         )}
       </main>
- 
+
       {/* Update modal background */}
       {selectedNews && (
         <div className="fixed inset-0 bg-black/90 backdrop-blur-sm z-50">
           <div className="container mx-auto px-4 py-16">
             <div className="bg-gray-900/80 backdrop-blur-md rounded-lg p-6 max-w-4xl mx-auto border border-gray-800">
               <div className="flex justify-between items-start mb-4">
-                <h2 className="text-2xl font-bold text-white">{selectedNews.title}</h2>
+                <h2 className="font-['Syncopate'] text-2xl font-bold text-white tracking-wide">
+                  {selectedNews.title}
+                </h2>
                 <button onClick={() => setSelectedNews(null)} className="text-gray-400 hover:text-white">
                   ✕
                 </button>
@@ -607,8 +488,9 @@ const Home: React.FC = () => {
           </div>
         </div>
       )}
+      
+      <Footer />
     </div>
   );
 };
- 
-export default Home;
+ export default Home;

@@ -206,7 +206,7 @@ const AnimatedTagline: React.FC = () => {
         <div className="blob blob-3" />
 
         <div ref={titleRef} className="main-title">
-          {"Atlantis".split('').map((letter, index) => (
+          {"Dwarka".split('').map((letter, index) => (
             <span key={index} className="title-letter">{letter}</span>
           ))}
         </div>

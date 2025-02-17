@@ -3,20 +3,29 @@ import { onAuthStateChanged } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
 import { auth, db } from '../firebase/config';
 
+interface AuthUser {
+  uid: string;
+  email: string | null;
+  isAdmin: boolean;
+}
+
 export const useAuth = () => {
-  const [user, setUser] = useState<any>(null);
-  const [isAdmin, setIsAdmin] = useState(false);
+  const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        const adminDoc = await getDoc(doc(db, 'admins', user.uid));
-        setIsAdmin(adminDoc.exists());
-        setUser(user);
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (firebaseUser) {
+        // Check if user is admin
+        const adminDoc = await getDoc(doc(db, 'admins', firebaseUser.uid));
+        
+        setUser({
+          uid: firebaseUser.uid,
+          email: firebaseUser.email,
+          isAdmin: adminDoc.exists() && adminDoc.data()?.isAdmin === true
+        });
       } else {
         setUser(null);
-        setIsAdmin(false);
       }
       setLoading(false);
     });
@@ -24,5 +33,5 @@ export const useAuth = () => {
     return () => unsubscribe();
   }, []);
 
-  return { user, isAdmin, loading };
+  return { user, loading };
 };

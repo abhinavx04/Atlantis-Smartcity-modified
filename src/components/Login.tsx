@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
 import { auth, db } from '../firebase/config';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, serverTimestamp, setDoc } from 'firebase/firestore';
 
 interface LoginProps {
   onClose: () => void;
@@ -15,26 +15,69 @@ const Login: React.FC<LoginProps> = ({ onClose }) => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
+  // Updated check admin status function with better logging
   const checkAdminStatus = async (uid: string) => {
-    const adminDoc = await getDoc(doc(db, 'admins', uid));
-    return adminDoc.exists();
+    try {
+      console.log('Checking admin status for user:', uid);
+      const userRef = doc(db, 'users', uid);
+      const userDoc = await getDoc(userRef);
+      console.log('User document exists:', userDoc.exists());
+
+      if (userDoc.exists()) {
+        const userData = userDoc.data();
+        console.log('Full user data:', userData);
+
+        if (!userData.hasOwnProperty('isAdmin')) {
+          // If isAdmin field doesn't exist, add it
+          await updateDoc(userRef, {
+            isAdmin: email === 'abhinavpillai92@gmail.com' // Set true for specific admin email
+          });
+          return email === 'abhinavpillai92@gmail.com';
+        }
+
+        return userData.isAdmin === true;
+      }
+
+      return false;
+    } catch (error) {
+      console.error('Error checking admin status:', error);
+      return false;
+    }
   };
 
-  const handleLogin = async (user: any) => {
+  // Updated create/update user function
+  const createOrUpdateUser = async (uid: string, userEmail: string) => {
     try {
-      const isAdmin = await checkAdminStatus(user.uid);
-      
-      // Update last login
-      const userRef = doc(db, isAdmin ? 'admins' : 'users', user.uid);
-      await setDoc(userRef, {
-        lastLogin: new Date()
-      }, { merge: true });
+      const userRef = doc(db, 'users', uid);
+      const userDoc = await getDoc(userRef);
 
-      // Navigate based on role
-      navigate(isAdmin ? '/admin/dashboard' : '/home');
-    } catch (err) {
-      console.error('Error checking user role:', err);
-      setError('Error verifying user role');
+      if (!userDoc.exists()) {
+        // Create new user document
+        await setDoc(userRef, {
+          email: userEmail,
+          createdAt: serverTimestamp(),
+          lastLogin: serverTimestamp(),
+          displayName: userEmail.split('@')[0],
+          isAdmin: userEmail === 'abhinavpillai92@gmail.com' // Set true for specific admin email
+        });
+      } else {
+        // Update existing user's login time
+        const userData = userDoc.data();
+        if (!userData.hasOwnProperty('isAdmin')) {
+          // Add isAdmin field if it doesn't exist
+          await updateDoc(userRef, {
+            lastLogin: serverTimestamp(),
+            isAdmin: userEmail === 'abhinavpillai92@gmail.com' // Set true for specific admin email
+          });
+        } else {
+          // Just update login time
+          await updateDoc(userRef, {
+            lastLogin: serverTimestamp()
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error creating/updating user:', error);
     }
   };
 
@@ -48,9 +91,23 @@ const Login: React.FC<LoginProps> = ({ onClose }) => {
     setError('');
 
     try {
-      const result = await signInWithEmailAndPassword(auth, email, password);
-      await handleLogin(result.user);
+      console.log('Attempting email login for:', email);
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      console.log('User authenticated:', userCredential.user.uid);
+
+      await createOrUpdateUser(userCredential.user.uid, email);
+      const isAdmin = await checkAdminStatus(userCredential.user.uid);
+      console.log('Is user admin?', isAdmin);
+
+      if (isAdmin) {
+        console.log('Redirecting to admin dashboard');
+        navigate('/home');
+      } else {
+        console.log('Regular user login - redirecting to home');
+        navigate('/home');
+      }
     } catch (err: any) {
+      console.error('Login error:', err);
       switch (err.code) {
         case 'auth/invalid-email':
           setError('Invalid email address');
@@ -76,7 +133,16 @@ const Login: React.FC<LoginProps> = ({ onClose }) => {
     try {
       const provider = new GoogleAuthProvider();
       const result = await signInWithPopup(auth, provider);
-      await handleLogin(result.user);
+      const userEmail = result.user.email || '';
+
+      await createOrUpdateUser(result.user.uid, userEmail);
+      const isAdmin = await checkAdminStatus(result.user.uid);
+
+      if (isAdmin) {
+        navigate('/admin/dashboard');
+      } else {
+        navigate('/home');
+      }
     } catch (err: any) {
       if (err.code === 'auth/popup-closed-by-user') {
         setError('Sign in cancelled');
@@ -163,7 +229,7 @@ const Login: React.FC<LoginProps> = ({ onClose }) => {
                   : 'bg-blue-500/50 hover:bg-blue-500/60'
                 }
               `}
-            ></button>
+            >
               {loading ? 'Signing in...' : 'Sign In'}
             </button>
           </form>

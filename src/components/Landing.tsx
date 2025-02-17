@@ -58,7 +58,7 @@ const Landing: React.FC = () => {
               }}
               className="relative z-10"
             >
-              Atlantis
+              Dwarka
             </h1>
             {/* Echo effect */}
             <div 
@@ -78,7 +78,7 @@ const Landing: React.FC = () => {
                 animation: 'glowPulse 3s infinite',
               }}
             >
-              Atlantis
+              Dwarka
             </div>
           </div>
 
@@ -97,7 +97,7 @@ const Landing: React.FC = () => {
             }}
             className="uppercase"
           >
-            Smart City
+            Smart City Paradise
           </div>
         </div>
 

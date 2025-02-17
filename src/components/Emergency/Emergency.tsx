@@ -32,35 +32,23 @@ const Emergency: React.FC = () => {
   const [nearbyPlaces, setNearbyPlaces] = useState<Place[]>([]);
   const [map, setMap] = useState<google.maps.Map | null>(null);
   
-  const [currentUser, setCurrentUser] = useState<string>('');
+  // Current time state
   const [currentTime, setCurrentTime] = useState<string>('');
+  const [currentUser] = useState<string>('Krishna27S');
 
-  // Add auth listener to get current user
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        setCurrentUser(user.email || user.uid);
-      } else {
-        navigate('/');
-      }
-    });
+  // // Update current time every second
+  // useEffect(() => {
+  //   const updateTime = () => {
+  //     const now = new Date();
+  //     const formattedTime = now.toISOString().slice(0, 19).replace('T', ' ');
+  //     setCurrentTime(formattedTime);
+  //   };
 
-    return () => unsubscribe();
-  }, [navigate]);
+  //   updateTime(); // Initial update
+  //   const interval = setInterval(updateTime, 1000);
 
-  // Update current time every second
-  useEffect(() => {
-    const updateTime = () => {
-      const now = new Date();
-      const formattedTime = now.toISOString().slice(0, 19).replace('T', ' ');
-      setCurrentTime(formattedTime);
-    };
-
-    updateTime(); // Initial update
-    const interval = setInterval(updateTime, 1000);
-
-    return () => clearInterval(interval);
-  }, []);
+  //   return () => clearInterval(interval);
+  // }, []);
 
   const mapContainerStyle = {
     width: '100%',

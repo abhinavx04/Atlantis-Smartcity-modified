@@ -3,10 +3,12 @@ import Landing from './components/Landing';
 import Home from './components/Home/Home';
 import Announcement from './components/Announcement';
 import Emergency from './components/Emergency/Emergency'
+import Chatbot from './components/Chatbot';
 
 function App() {
   return (
     <Router>
+      <Chatbot />
       <Routes>
         <Route path="/" element={<Landing />} />
         <Route path="/home" element={<Home />} />

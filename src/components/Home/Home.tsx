@@ -10,6 +10,7 @@ import Navbar from '../Navbar';  // Add this import
 import AnimatedTagline from './AnimatedTagline';
 import Footer from './Footer';
 import Explore from './Explore';
+import SmartCityDescription from './SmartCityDescription';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -42,7 +43,10 @@ const NewsCard: React.FC<{
   index: number;
 }> = ({ item, index }) => {
   return (
-    <div
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, delay: index * 0.1 }}
       className={`
         news-card
         flex-shrink-0
@@ -83,7 +87,7 @@ const NewsCard: React.FC<{
           </div>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 };
 
@@ -129,15 +133,46 @@ const NewsHeading: React.FC = () => {
   );
 };
 
+// Add new component for scroll buttons
+const ScrollButtons: React.FC<{
+  onScroll: (direction: 'left' | 'right') => void;
+}> = ({ onScroll }) => {
+  return (
+    <div className="flex justify-center gap-4 mt-6">
+      <button
+        onClick={() => onScroll('left')}
+        className="px-6 py-3 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 
+                   transition-colors duration-300 border border-blue-500/20 group"
+      >
+        <span className="inline-block transform group-hover:-translate-x-1 transition-transform">
+          ←
+        </span>{' '}
+        Previous
+      </button>
+      <button
+        onClick={() => onScroll('right')}
+        className="px-6 py-3 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 
+                   transition-colors duration-300 border border-blue-500/20 group"
+      >
+        Next{' '}
+        <span className="inline-block transform group-hover:translate-x-1 transition-transform">
+          →
+        </span>
+      </button>
+    </div>
+  );
+};
+
 const Home: React.FC = () => {
   const [news, setNews] = useState<NewsItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeCategory, setActiveCategory] = useState('all');
-  const [activeIndex, setActiveIndex] = useState(0);
   const [selectedNews, setSelectedNews] = useState<NewsItem | null>(null);
   const [currentUser, setCurrentUser] = useState<string | null>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const trackRef = useRef<HTMLDivElement>(null);
+  const newsContainerRef = useRef<HTMLDivElement>(null);
+  
+  // Remove these refs as they're no longer needed
+  // const containerRef = useRef<HTMLDivElement>(null);
+  // const trackRef = useRef<HTMLDivElement>(null);
 
   // Add auth listener
   useEffect(() => {
@@ -152,8 +187,6 @@ const Home: React.FC = () => {
     return () => unsubscribe();
   }, []);
 
-  const categories = ['all', 'city', 'health', 'transport', 'emergency', 'events'];
- 
   useEffect(() => {
     fetchNews();
   }, []);
@@ -163,173 +196,43 @@ const Home: React.FC = () => {
       setLoading(true);
       const API_KEY = import.meta.env.VITE_NEWS_API_KEY;
  
-      // Add page and pageSize parameters
-      const queries = [
-        'India urban development',
-        'India smart city',
-        'India infrastructure',
-        'Indian cities problems'
-      ];
- 
-      const newsPromises = queries.map(query => 
-        axios.get(
-          `https://newsapi.org/v2/everything`, {
-            params: {
-              q: query,
-              apiKey: API_KEY,
-              sortBy: 'publishedAt',
-              language: 'en',
-              pageSize: 10, // Limit results per query
-              page: 1 // Start with first page
-            }
+      const response = await axios.get(
+        'https://newsapi.org/v2/everything', {
+          params: {
+            q: 'India urban development OR smart city',
+            apiKey: API_KEY,
+            sortBy: 'publishedAt',
+            language: 'en',
+            pageSize: 30
           }
-        )
+        }
       );
  
-      interface NewsApiResponse {
-        articles: NewsItem[];
-        status: string;
-        totalResults: number;
-      }
+      console.log('API Response:', response.data);
  
-      const responses = await Promise.all(newsPromises);
- 
-      // Log the API response for debugging
-      console.log('API Responses:', responses.map(r => r.data));
- 
-      const allArticles = responses.flatMap(response => 
-        (response.data as NewsApiResponse).articles || []
-      );
- 
-      // Remove duplicates and null values
-      const uniqueArticles = Array.from(
-        new Map(
-          allArticles
-            .filter(article => article && article.title)
-            .map(article => [article.title, article])
-        ).values()
-      );
- 
-      const processedNews = uniqueArticles
-        .map((article: NewsItem) => ({
-          ...article,
-          category: categorizeNews(article),
-          location: detectLocation(article)
-        }))
-        .slice(0, 30);
- 
-      setNews(processedNews);
+      const articles = response.data.articles || [];
+      setNews(articles);
     } catch (error) {
       console.error('Error fetching news:', error);
-      setNews(getSampleNews());
+      setNews([]);
     } finally {
       setLoading(false);
     }
   };
- 
-  const getSampleNews = (): NewsItem[] => {
-    return [
-      {
-        title: "Smart City Initiative Launches in Delhi",
-        description: "New smart city project aims to improve urban infrastructure...",
-        url: "#",
-        urlToImage: "https://via.placeholder.com/640x360?text=Smart+City+Delhi",
-        publishedAt: new Date().toISOString(),
-        source: { name: "Indian Express" },
-        category: "city",
-        location: "Delhi"
-      },
-      // Add more sample news items as needed
-    ];
-  };
- 
-  const categorizeNews = (article: NewsItem): string => {
-    const text = `${article.title} ${article.description}`.toLowerCase();
- 
-    if (text.includes('emergency') || text.includes('accident')) return 'emergency';
-    if (text.includes('transport') || text.includes('traffic')) return 'transport';
-    if (text.includes('event') || text.includes('festival')) return 'events';
-    if (text.includes('health') || text.includes('hospital')) return 'health';
-    if (text.includes('city') || text.includes('urban')) return 'city';
-    return 'all';
-  };
- 
-  const detectLocation = (article: NewsItem): string => {
-    const text = `${article.title} ${article.description}`.toLowerCase();
-    const cities = [
-      'delhi', 'mumbai', 'bangalore', 'kolkata', 'chennai', 
-      'hyderabad', 'pune', 'ahmedabad', 'jaipur'
-    ];
- 
-    for (const city of cities) {
-      if (text.includes(city)) {
-        return city.charAt(0).toUpperCase() + city.slice(1);
-      }
-    }
-    return 'India';
-  };
- 
-  const filteredNews = news.filter(
-    item => activeCategory === 'all' || item.category === activeCategory
-  );
 
-  useEffect(() => {
-    if (containerRef.current && trackRef.current && filteredNews.length > 0) {
-      // Reset any existing ScrollTrigger instances
-      ScrollTrigger.getAll().forEach(st => st.kill());
-      
-      const track = trackRef.current;
-      const cards = track.children;
-      const totalWidth = (cards.length * 420) - window.innerWidth; // 400px card + 20px gap
-  
-      gsap.to(track, {
-        x: -totalWidth,
-        ease: "none",
-        scrollTrigger: {
-          trigger: containerRef.current,
-          start: "top top",
-          end: `+=${totalWidth}`,
-          pin: true,
-          scrub: 1,
-          anticipatePin: 1,
-          invalidateOnRefresh: true,
-          onUpdate: (self) => {
-            // Optional: Update card opacity based on position
-            Array.from(cards).forEach((card, i) => {
-              const progress = self.progress;
-              const cardProgress = (i / (cards.length - 1));
-              const distance = Math.abs(progress - cardProgress);
-              gsap.to(card, {
-                opacity: 1 - Math.min(distance * 2, 0.6),
-                duration: 0.2
-              });
-            });
-          }
-        }
+  const handleScroll = (direction: 'left' | 'right') => {
+    if (newsContainerRef.current) {
+      const scrollAmount = direction === 'left' ? -800 : 800;
+      newsContainerRef.current.scrollBy({
+        left: scrollAmount,
+        behavior: 'smooth'
       });
     }
-  }, [filteredNews]);
- 
-  useEffect(() => {
-    if (containerRef.current) {
-      gsap.to(".news-container", {
-        y: 0,
-        opacity: 1,
-        stagger: 0.2,
-        ease: "power2.out",
-        scrollTrigger: {
-          trigger: containerRef.current,
-          start: "top center",
-          end: "bottom center",
-          toggleActions: "play none none reverse",
-        },
-      });
-    }
-  }, [filteredNews.length]);
+  };
  
   return (
     <div className="min-h-screen bg-black relative overflow-hidden">
-      {/* Smart City Grid Background */}
+      {/* Background effects */}
       <div className="absolute inset-0">
         <div className="absolute inset-0 bg-[radial-gradient(#1e3a8a_1px,transparent_1px)] [background-size:40px_40px] opacity-5" />
         
@@ -383,75 +286,52 @@ const Home: React.FC = () => {
 
       <Navbar currentUser={currentUser || ''} />
       
-      {/* Add AnimatedTagline here, after Navbar but before main content */}
+      {/* Main content section */}
       <div className="relative z-10">
         <AnimatedTagline />
+        <SmartCityDescription />
       </div>
 
-      <main className="pt-20 relative z-10">
-        <div className="container mx-auto px-4">
-          {/* Update category buttons background */}
-          <div className="mb-8 flex space-x-4 overflow-x-auto pb-2">
-            {categories.map((category) => (
-              <button
-                key={category}
-                onClick={() => {
-                  setActiveCategory(category);
-                  setActiveIndex(0);
-                }}
-                className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors
-                  ${activeCategory === category
-                    ? 'bg-blue-500 text-white'
-                    : 'bg-gray-900/50 text-gray-300 hover:bg-gray-800/50'
-                  }`}
-              >
-                {category.charAt(0).toUpperCase() + category.slice(1)}
-              </button>
-            ))}
-          </div>
-          
-          {/* Add the NewsHeading component */}
-          <NewsHeading />
-        </div>
-
-        {loading ? (
-          <div className="flex flex-col items-center justify-center h-64 space-y-4">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-            <p className="text-gray-400">Loading news...</p>
-          </div>
-        ) : filteredNews.length > 0 ? (
-          <div ref={containerRef} className="relative w-full h-[80vh] overflow-hidden mb-16">
-            <div 
-              ref={trackRef}
-              className="absolute top-1/2 left-0 -translate-y-1/2 flex gap-5 pl-[10vw]"
-              style={{ 
-                willChange: 'transform',
-                paddingRight: '10vw' // Add right padding for last card
-              }}
-            >
-              {filteredNews.map((item, index) => (
-                <NewsCard
-                  key={item.title + index}
-                  item={item}
-                  index={index}
-                />
-              ))}
-            </div>
-            
-            <div className="absolute bottom-8 left-1/2 -translate-x-1/2 text-white/50 text-sm">
-              Scroll to explore more news
-            </div>
-          </div>
-        ) : (
-          <div className="flex flex-col items-center justify-center h-64">
-            <p className="text-gray-400 text-lg">No news found for this category</p>
-          </div>
-        )}
-      </main>
-
+      {/* Explore section */}
       <Explore />
 
-      {/* Update modal background */}
+      {/* News section - moved to bottom */}
+      <section className="relative z-10 py-20 bg-black/50 backdrop-blur-sm">
+        <div className="container mx-auto px-4">
+          <NewsHeading />
+          
+          {loading ? (
+            <div className="flex flex-col items-center justify-center h-64 space-y-4">
+              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+              <p className="text-gray-400">Loading news...</p>
+            </div>
+          ) : news.length > 0 ? (
+            <>
+              <div 
+                ref={newsContainerRef}
+                className="overflow-x-auto scrollbar-hide scroll-smooth"
+              >
+                <div className="flex gap-6 py-8 min-w-max px-4">
+                  {news.map((item, index) => (
+                    <NewsCard
+                      key={item.title + index}
+                      item={item}
+                      index={index}
+                    />
+                  ))}
+                </div>
+              </div>
+              <ScrollButtons onScroll={handleScroll} />
+            </>
+          ) : (
+            <div className="flex flex-col items-center justify-center h-64">
+              <p className="text-gray-400 text-lg">No news available</p>
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* News modal */}
       {selectedNews && (
         <div className="fixed inset-0 bg-black/90 backdrop-blur-sm z-50">
           <div className="container mx-auto px-4 py-16">

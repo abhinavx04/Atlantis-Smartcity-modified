@@ -2,6 +2,8 @@ import React, { useEffect, useRef } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
+gsap.registerPlugin(ScrollTrigger);
+
 const SmartCityDescription: React.FC = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const cityNameRef = useRef<HTMLDivElement>(null);
@@ -9,14 +11,17 @@ const SmartCityDescription: React.FC = () => {
   const linesRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    // Ensure GSAP is registered
+    gsap.registerPlugin(ScrollTrigger);
+
     // Reset any existing ScrollTrigger instances
     ScrollTrigger.getAll().forEach(st => st.kill());
 
     const ctx = gsap.context(() => {
-      // Animate city name
+      // Animate city name with more lenient trigger points
       gsap.fromTo(cityNameRef.current,
         {
-          y: 50,
+          y: 100,
           opacity: 0,
           scale: 0.9
         },
@@ -28,17 +33,20 @@ const SmartCityDescription: React.FC = () => {
           ease: "power3.out",
           scrollTrigger: {
             trigger: cityNameRef.current,
-            start: "top center+=100",
-            toggleActions: "play none none reverse"
+            start: "top bottom-=100",
+            end: "bottom center",
+            toggleActions: "play none none reverse",
+            markers: false, // Ensure this is false
+            once: false // Allow re-triggering
           }
         }
       );
 
-      // Animate description text with a typewriter-like effect
+      // Adjust description animation
       gsap.fromTo(descriptionRef.current,
         {
           opacity: 0,
-          y: 30
+          y: 50
         },
         {
           opacity: 1,
@@ -47,13 +55,15 @@ const SmartCityDescription: React.FC = () => {
           ease: "power2.out",
           scrollTrigger: {
             trigger: descriptionRef.current,
-            start: "top center+=50",
-            toggleActions: "play none none reverse"
+            start: "top bottom-=50",
+            end: "bottom center",
+            toggleActions: "play none none reverse",
+            markers: false // Ensure this is false
           }
         }
       );
 
-      // Animate decorative lines
+      // Update lines animation
       if (linesRef.current) {
         const lines = linesRef.current.children;
         gsap.fromTo(lines,
@@ -69,19 +79,28 @@ const SmartCityDescription: React.FC = () => {
             ease: "power3.inOut",
             scrollTrigger: {
               trigger: linesRef.current,
-              start: "top center+=150",
-              toggleActions: "play none none reverse"
+              start: "top bottom",
+              end: "bottom center",
+              toggleActions: "play none none reverse",
+              markers: false // Ensure this is false
             }
           }
         );
       }
     }, containerRef);
 
-    return () => ctx.revert();
+    return () => {
+      ctx.revert();
+      // Clean up ScrollTrigger instances
+      ScrollTrigger.getAll().forEach(st => st.kill());
+    };
   }, []);
 
   return (
-    <div ref={containerRef} className="relative py-20 overflow-hidden">
+    <div 
+      ref={containerRef} 
+      className="relative py-20 min-h-screen flex items-center justify-center overflow-hidden"
+    >
       {/* Background Effects */}
       <div className="absolute inset-0">
         <div className="absolute inset-0 bg-[radial-gradient(#1e3a8a_1px,transparent_1px)] [background-size:40px_40px] opacity-5" />
@@ -108,7 +127,7 @@ const SmartCityDescription: React.FC = () => {
           className="text-center mb-12"
         >
           <h2 className="font-['Syncopate'] text-6xl md:text-7xl lg:text-8xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-500 via-blue-400 to-blue-600">
-          About Us
+            ABOUT US
           </h2>
         </div>
 
@@ -123,12 +142,6 @@ const SmartCityDescription: React.FC = () => {
           
           <p className="text-gray-400 text-lg leading-relaxed">
             While the precise definition varies, a smart city's primary goal is to use smart technology and data analysis to optimise local operations, spur economic growth, and enhance residents' quality of life. The smart city's worth is determined by how it chooses to use its technology, not just how much of it it may have.
-          </p>
-
-          {/* Added new description */}
-          <p className="text-gray-300 text-lg leading-relaxed mt-8">
-            <span className="text-blue-400 font-semibold">A Smart Paradise</span><br />
-            The success of a smart city rests on its capacity to forge a solid alliance between the public and private sectors, notably with regard to bureaucracy and rules. The majority of the labour required to establish and sustain a digital, data-driven environment is done outside of the government, thus this partnership is essential. Sensors from one business, cameras from another, and a server from a third company might all be part of the surveillance apparatus for crowded streets.
           </p>
 
           {/* Additional decorative element */}

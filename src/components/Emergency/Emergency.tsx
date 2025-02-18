@@ -7,6 +7,7 @@ import { GoogleMap, LoadScript, Marker, InfoWindow } from '@react-google-maps/ap
 import { GOOGLE_MAPS_API_KEY, EMERGENCY_CONTACT, mapStyles } from './constants';
 import Navbar from '../Navbar';
 import emailjs from '@emailjs/browser';
+import Footer from '../Home/Footer';
 
 const EMAIL_SERVICE_ID = import.meta.env.VITE_EMAILJS_SERVICE_ID;
 const EMAIL_TEMPLATE_ID = import.meta.env.VITE_EMAILJS_TEMPLATE_ID;
@@ -247,13 +248,13 @@ const Emergency: React.FC = () => {
       
       <Navbar currentUser={currentUser} />
 
-      <main className="container mx-auto px-4 pt-16 relative z-10">
+      <main className="container mx-auto px-4 pt-24 relative z-10">
         {/* Header with Emergency Title and Location */}
-        <div className="text-center mb-12">
-          <h1 className="text-6xl md:text-7xl font-['Syncopate'] text-white mb-6">
+        <div className="text-center mb-8">
+          <h1 className="text-4xl md:text-5xl font-['Syncopate'] text-white mb-4">
             EMERGENCY
           </h1>
-          <div className="text-red-500 animate-pulse text-xl">
+          <div className="text-red-500 animate-pulse text-lg">
             Your Location: {currentLocation ? 
               `${currentLocation.lat.toFixed(4)}, ${currentLocation.lng.toFixed(4)}` : 
               'Locating...'}
@@ -433,7 +434,7 @@ const Emergency: React.FC = () => {
           </div>
         </details>
 
-        {/* Report Emergency - Moved up */}
+        {/* Report Emergency - Moved here, before Emergency Guidelines */}
         <div className="bg-gray-800/40 backdrop-blur-sm rounded-xl p-4 mb-8 border border-gray-700/50">
           <h2 className="text-xl font-['Syncopate'] text-white mb-4">
             REPORT EMERGENCY
@@ -508,14 +509,183 @@ const Emergency: React.FC = () => {
           )}
         </div>
 
+        {/* Emergency Safety Guidelines */}
+        <div className="bg-gray-800/40 backdrop-blur-sm rounded-xl p-6 mb-8 border border-gray-700/50">
+          <h2 className="text-xl font-['Syncopate'] text-white mb-6">
+            EMERGENCY GUIDELINES
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {/* CPR Guide */}
+            <motion.div
+              whileHover={{ scale: 1.02 }}
+              className="bg-gray-900/50 p-6 rounded-xl border border-blue-500/20"
+            >
+              <h3 className="text-xl text-blue-400 mb-4 font-semibold flex items-center gap-2">
+                <span>🫀</span> CPR Steps
+              </h3>
+              <ol className="space-y-3 text-gray-300 text-sm">
+                <li className="flex items-start gap-2">
+                  <span className="text-blue-400">1.</span>
+                  Check responsiveness and call for help (112)
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-blue-400">2.</span>
+                  Check breathing for 10 seconds
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-blue-400">3.</span>
+                  Give 30 chest compressions
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-blue-400">4.</span>
+                  Give 2 rescue breaths
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-blue-400">5.</span>
+                  Continue cycle until help arrives
+                </li>
+              </ol>
+            </motion.div>
+
+            {/* Fire Safety */}
+            <motion.div
+              whileHover={{ scale: 1.02 }}
+              className="bg-gray-900/50 p-6 rounded-xl border border-red-500/20"
+            >
+              <h3 className="text-xl text-red-400 mb-4 font-semibold flex items-center gap-2">
+                <span>🔥</span> Fire Safety
+              </h3>
+              <ul className="space-y-3 text-gray-300 text-sm">
+                <li className="flex items-start gap-2">
+                  <span className="text-red-400">•</span>
+                  STOP, DROP, and ROLL if clothes catch fire
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-red-400">•</span>
+                  Stay low to avoid smoke inhalation
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-red-400">•</span>
+                  Feel doors for heat before opening
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-red-400">•</span>
+                  Use stairs, never elevators
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-red-400">•</span>
+                  Meet at designated assembly point
+                </li>
+              </ul>
+            </motion.div>
+
+            {/* Women's Safety */}
+            <motion.div
+              whileHover={{ scale: 1.02 }}
+              className="bg-gray-900/50 p-6 rounded-xl border border-pink-500/20"
+            >
+              <h3 className="text-xl text-pink-400 mb-4 font-semibold flex items-center gap-2">
+                <span>🚺</span> Women's Safety
+              </h3>
+              <ul className="space-y-3 text-gray-300 text-sm">
+                <li className="flex items-start gap-2">
+                  <span className="text-pink-400">•</span>
+                  Trust your instincts - leave if unsafe
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-pink-400">•</span>
+                  Keep emergency contacts ready (1091)
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-pink-400">•</span>
+                  Share live location with trusted contacts
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-pink-400">•</span>
+                  Document incidents if safe to do so
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-pink-400">•</span>
+                  Stay in well-lit, populated areas
+                </li>
+              </ul>
+            </motion.div>
+
+            {/* Medical Emergency */}
+            <motion.div
+              whileHover={{ scale: 1.02 }}
+              className="bg-gray-900/50 p-6 rounded-xl border border-green-500/20"
+            >
+              <h3 className="text-xl text-green-400 mb-4 font-semibold flex items-center gap-2">
+                <span>🏥</span> Medical Emergency
+              </h3>
+              <ul className="space-y-3 text-gray-300 text-sm">
+                <li className="flex items-start gap-2">
+                  <span className="text-green-400">•</span>
+                  Call ambulance immediately (108)
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-green-400">•</span>
+                  Keep victim calm and comfortable
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-green-400">•</span>
+                  Do not move if spinal injury suspected
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-green-400">•</span>
+                  Control bleeding with direct pressure
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-green-400">•</span>
+                  Monitor breathing and consciousness
+                </li>
+              </ul>
+            </motion.div>
+
+            {/* Road Accident */}
+            <motion.div
+              whileHover={{ scale: 1.02 }}
+              className="bg-gray-900/50 p-6 rounded-xl border border-yellow-500/20"
+            >
+              <h3 className="text-xl text-yellow-400 mb-4 font-semibold flex items-center gap-2">
+                <span>🚗</span> Road Accident
+              </h3>
+              <ul className="space-y-3 text-gray-300 text-sm">
+                <li className="flex items-start gap-2">
+                  <span className="text-yellow-400">•</span>
+                  Ensure your safety first
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-yellow-400">•</span>
+                  Call emergency services (112)
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-yellow-400">•</span>
+                  Secure the accident scene
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-yellow-400">•</span>
+                  Document incident details
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-yellow-400">•</span>
+                  Exchange information if involved
+                </li>
+              </ul>
+            </motion.div>
+          </div>
+        </div>
+
         {/* SOS Button */}
         <motion.button
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.9 }}
           onClick={handleSOS}
-          className="fixed bottom-8 right-8 bg-red-500 text-white w-20 h-20 rounded-full 
+          className="fixed bottom-24 left-8 bg-red-500 text-white w-20 h-20 rounded-full 
                     flex items-center justify-center text-2xl font-bold shadow-lg 
-                    hover:bg-red-600 transition-colors z-50 animate-pulse"
+                    hover:bg-red-600 transition-colors z-50 animate-pulse
+                    md:right-8 md:left-auto md:bottom-32"
         >
           SOS
         </motion.button>
@@ -525,8 +695,8 @@ const Emergency: React.FC = () => {
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="fixed bottom-4 right-4 bg-green-500/20 border border-green-500/40 
-                       rounded-lg p-4 max-w-md backdrop-blur-sm"
+            className="fixed bottom-24 right-4 bg-green-500/20 border border-green-500/40 
+                       rounded-lg p-4 max-w-md backdrop-blur-sm z-40"
           >
             <p className="text-green-400">
               {showLocationAlert ? 'Connecting emergency call...' : 'Emergency alert sent!'}
@@ -539,6 +709,7 @@ const Emergency: React.FC = () => {
           </motion.div>
         )}
       </main>
+      <Footer />
     </div>
   );
 };

@@ -9,6 +9,7 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import Navbar from '../Navbar';  // Add this import
 import AnimatedTagline from './AnimatedTagline';
 import Footer from './Footer';
+import Explore from './Explore';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -447,6 +448,8 @@ const Home: React.FC = () => {
           </div>
         )}
       </main>
+
+      <Explore />
 
       {/* Update modal background */}
       {selectedNews && (

@@ -10,7 +10,7 @@ interface NavbarProps {
 const navItems = [
   { name: 'Events', path: '/events' },
   { name: 'Emergency', path: '/emergency' },
-  { name: 'Announcements', path: '/announcements' },
+  { name: 'Announcements', path: '/announcements' }, // Changed to lowercase
   { name: 'Transportation', path: '/transport' },
   { name: 'Alerts', path: '/alerts' },
   { name: 'Ambulance', path: '/ambulance' },
@@ -160,7 +160,7 @@ const Navbar: React.FC<NavbarProps> = ({ currentUser }) => {
                   style={{ fontFamily: 'Syncopate, sans-serif' }}
                   onClick={() => navigate('/home')}
                 >
-                  ATLANTIS
+                  DWARKA
                 </span>
                 
                 <div className="hidden md:flex space-x-1">

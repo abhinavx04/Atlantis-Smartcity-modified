@@ -72,10 +72,71 @@ const Events = () => {
   };
 
   const fetchEvents = async () => {
+    console.log('🔍 Starting to fetch events...');
     try {
       setLoading(true);
-      // Your existing sample events data
-      const sampleEvents = [
+      const EVENTBRITE_API_KEY = import.meta.env.VITE_EVENTBRITE_API_KEY;
+      console.log('📝 API Key available:', !!EVENTBRITE_API_KEY);
+      
+      console.log('🌐 Making API request to Eventbrite...');
+      const response = await axios.get(
+        'https://www.eventbriteapi.com/v3/organizations/me/events/',
+        {
+          headers: {
+            'Authorization': `Bearer ${EVENTBRITE_API_KEY}`,
+            'Content-Type': 'application/json'
+          },
+          params: {
+            status: 'live',
+            expand: 'venue,ticket_classes,category'
+          }
+        }
+      );
+      
+      console.log('✅ API Response received:', {
+        status: response.status,
+        eventCount: response.data.events?.length || 0,
+        pagination: response.data.pagination
+      });
+
+      if (!response.data.events) {
+        throw new Error('No events data in response');
+      }
+
+      const eventbriteEvents: Event[] = response.data.events.map((event: any) => {
+        console.log('📅 Processing event:', event.id, event.name.text);
+        return {
+          id: event.id,
+          title: event.name.text,
+          description: event.description.text,
+          startDate: event.start.utc,
+          endDate: event.end.utc,
+          location: event.venue?.name || 'TBA',
+          category: event.category?.name?.toLowerCase() || 'other',
+          image: event.logo?.url,
+          organizer: event.organization_name,
+          capacity: event.capacity,
+          registrationLink: event.url,
+          price: event.ticket_classes?.[0]?.cost?.display || 'Free'
+        };
+      });
+
+      console.log('🎉 Successfully processed', eventbriteEvents.length, 'events');
+      setEvents(eventbriteEvents);
+    } catch (error: any) {
+      console.error('❌ Error fetching events:', {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status,
+        headers: error.response?.headers
+      });
+      
+      if (error.response?.status === 401) {
+        console.error('🔑 Authentication failed. Please check your API key.');
+      }
+      
+      console.log('⚠️ Falling back to sample data...');
+      setEvents([
         {
           id: '1',
           title: '🎭 Cultural Festival 2025',
@@ -112,13 +173,10 @@ const Events = () => {
           organizer: 'Tech Innovation Hub',
           price: '$199'
         }
-      ];
-
-      setEvents(sampleEvents);
-    } catch (error) {
-      console.error('Error fetching events:', error);
+      ]);
     } finally {
       setLoading(false);
+      console.log('🏁 Fetch events operation completed');
     }
   };
 

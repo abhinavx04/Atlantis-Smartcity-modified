@@ -8,6 +8,39 @@ interface Message {
   id: string;
 }
 
+interface TypeWriterProps {
+  text: string;
+  speed?: number;
+}
+
+const TypeWriter: React.FC<TypeWriterProps> = ({ text, speed = 50 }) => {
+  const [displayedText, setDisplayedText] = useState('');
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [isTyping, setIsTyping] = useState(true);
+
+  useEffect(() => {
+    if (currentIndex < text.length) {
+      const timer = setTimeout(() => {
+        setDisplayedText(prev => prev + text[currentIndex]);
+        setCurrentIndex(prev => prev + 1);
+      }, speed);
+
+      return () => clearTimeout(timer);
+    } else {
+      setIsTyping(false);
+    }
+  }, [currentIndex, text, speed]);
+
+  return (
+    <div className="relative">
+      {displayedText}
+      {isTyping && (
+        <span className="animate-pulse ml-1 inline-block">▋</span>
+      )}
+    </div>
+  );
+};
+
 const Chatbot: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -17,9 +50,9 @@ const Chatbot: React.FC = () => {
 
   // FAQ database
   const faqs = {
-    "what is atlantis": `Atlantis is a revolutionary smart city management platform that enhances citizen-municipal connectivity through digital integration. It provides a secure web-based portal for accessing city services, submitting complaints, and interacting with administrators.`,
+    "what is dwarka": `Dwarka is a revolutionary smart city management platform that enhances citizen-municipal connectivity through digital integration. It provides a secure web-based portal for accessing city services, submitting complaints, and interacting with administrators.`,
     
-    "main features": `Atlantis offers several key features:
+    "main features": `Dwarka offers several key features:
     • Authenticated access via Aadhar card
     • City-wide announcements and updates
     • Complaint submission and tracking
@@ -35,7 +68,7 @@ const Chatbot: React.FC = () => {
     • SOS alert system
     • Real-time emergency tracking`,
 
-    "safety features": `Atlantis prioritizes safety with:
+    "safety features": `Dwarka prioritizes safety with:
     • Women's safety SOS system
     • AI-driven emergency detection
     • Live location tracking
@@ -83,8 +116,8 @@ const Chatbot: React.FC = () => {
     • Public facility bookings
     • Citizen feedback system`,
 
-    "how to access": `To access Atlantis:
-    • Visit www.atlantis-smartcity.com
+    "how to access": `To access Dwarka:
+    • Visit www.dwarka-smartcity.com
     • Register using your Aadhar card
     • Complete profile verification
     • Access services via web dashboard
@@ -128,7 +161,7 @@ const Chatbot: React.FC = () => {
   useEffect(() => {
     if (isOpen && messages.length === 0) {
       setMessages([{
-        text: "👋 Hello! I'm your Atlantis Smart City Assistant. Ask me anything about our services, or type 'help' for available topics!",
+        text: "🙏 Hi! I'm Sudama, your AI Assistant. Type 'help' for more information.",
         isUser: false,
         id: generateId()
       }]);
@@ -145,10 +178,11 @@ const Chatbot: React.FC = () => {
     };
 
     setMessages(prev => [...prev, userMessage]);
+    setInput('');
 
-    // Show typing indicator
+    // Add typing indicator
     const typingMessage: Message = {
-      text: "Typing...",
+      text: "▋",
       isUser: false,
       id: 'typing'
     };
@@ -156,15 +190,15 @@ const Chatbot: React.FC = () => {
 
     try {
       const response = await getAIResponse(input);
-      
       // Remove typing indicator and add AI response
       setMessages(prev => 
         prev.filter(m => m.id !== 'typing').concat({
           text: response,
           isUser: false,
-          id: generateId()
+          id: generateId(),
         })
       );
+      scrollToBottom();
     } catch (error) {
       console.error('AI Error:', error);
       setMessages(prev => 
@@ -175,8 +209,6 @@ const Chatbot: React.FC = () => {
         })
       );
     }
-
-    setInput('');
   };
 
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -214,7 +246,7 @@ const Chatbot: React.FC = () => {
           <div className="bg-gray-950 text-white p-6 rounded-t-2xl flex justify-between items-center">
             <div className="flex items-center space-x-2">
               <div className="w-3 h-3 rounded-full bg-green-400 animate-pulse" />
-              <h3 className="font-semibold text-lg animate-[fadeIn_0.3s_ease-out]">Atlantis Assistant</h3>
+              <h3 className="font-semibold text-lg animate-[fadeIn_0.3s_ease-out]">Sudama - Dwarka's Assistant</h3>
             </div>
             <button 
               onClick={toggleChat}
@@ -236,7 +268,7 @@ const Chatbot: React.FC = () => {
                 {!msg.isUser && (
                   <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white text-sm 
                     animate-[popIn_0.3s_ease-out]">
-                    A
+                    S
                   </div>
                 )}
                 <div
@@ -246,7 +278,11 @@ const Chatbot: React.FC = () => {
                       : 'bg-gray-800 text-white rounded-bl-none'}
                     animate-[scaleIn_0.3s_ease-out]`}
                 >
-                  {msg.text}
+                  {msg.isUser ? (
+                    msg.text
+                  ) : (
+                    <TypeWriter text={msg.text} speed={30} />
+                  )}
                 </div>
               </div>
             ))}
@@ -263,7 +299,7 @@ const Chatbot: React.FC = () => {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyPress={handleKeyPress}
-                placeholder="Ask me about Atlantis..."
+                placeholder="Ask Sudama about Dwarka..."
                 className="flex-1 border border-gray-700 bg-gray-800 text-white rounded-full px-6 py-3 
                   focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent 
                   transition-all duration-300 hover:border-blue-300

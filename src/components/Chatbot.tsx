@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { MessageCircle, X, Send, Loader2 } from 'lucide-react';
+import { MessageCircle, X, Send } from 'lucide-react';
+import { getAIResponse } from '../services/gemini';
 
 interface Message {
   text: string;
@@ -12,28 +13,104 @@ const Chatbot: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isAnimating, setIsAnimating] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<null | HTMLDivElement>(null);
 
   // FAQ database
   const faqs = {
-    "what is atlantis": "Atlantis is an innovative smart city platform designed to enhance urban living through technology.",
-    "features": `Our smart city features include:
-    • Real-time traffic monitoring
-    • Smart waste management
-    • Energy consumption tracking
-    • Emergency response system
-    • Community engagement portal`,
-    "transportation": `Our transportation services offer:
-    • Live bus/metro tracking
-    • Smart parking locations
-    • Traffic updates
-    • Bike-sharing system`,
-    "waste": `Our waste management includes:
-    • Automated collection
+    "what is atlantis": `Atlantis is a revolutionary smart city management platform that enhances citizen-municipal connectivity through digital integration. It provides a secure web-based portal for accessing city services, submitting complaints, and interacting with administrators.`,
+    
+    "main features": `Atlantis offers several key features:
+    • Authenticated access via Aadhar card
+    • City-wide announcements and updates
+    • Complaint submission and tracking
+    • Public facility reservations
+    • Direct communication with administrators
+    • Emergency services access
+    • Community engagement tools`,
+
+    "emergency services": `Our emergency services include:
+    • 24/7 Ambulance dispatch system
+    • Quick police response
+    • Emergency doctor appointments
+    • SOS alert system
+    • Real-time emergency tracking`,
+
+    "safety features": `Atlantis prioritizes safety with:
+    • Women's safety SOS system
+    • AI-driven emergency detection
+    • Live location tracking
+    • Quick police dispatch
+    • Emergency contact alerts
+    • 24/7 helpline access`,
+
+    "waste management": `Our waste management system includes:
+    • Food waste reduction program
+    • Surplus food distribution
+    • Real-time waste tracking
+    • Volunteer coordination
     • Smart bin monitoring
-    • Recycling programs
-    • Waste sorting guides`,
+    • Recycling programs`,
+
+    "transportation": `Transportation services offer:
+    • Car rental services
+    • Live bus/metro tracking
+    • Smart parking system
+    • Traffic updates
+    • Route optimization
+    • Bike-sharing network`,
+
+    "healthcare": `Healthcare services include:
+    • Online doctor appointments
+    • Ambulance dispatch system
+    • Hospital coordination
+    • Patient status tracking
+    • Emergency response
+    • Medical facility locator`,
+
+    "police services": `Police services feature:
+    • Online crime reporting
+    • Real-time incident tracking
+    • Case status monitoring
+    • Emergency response
+    • Community safety alerts
+    • Direct police communication`,
+
+    "community features": `Community services include:
+    • Local news updates
+    • Weather alerts
+    • Community announcements
+    • Event calendar
+    • Public facility bookings
+    • Citizen feedback system`,
+
+    "how to access": `To access Atlantis:
+    • Visit www.atlantis-smartcity.com
+    • Register using your Aadhar card
+    • Complete profile verification
+    • Access services via web dashboard
+    • Download mobile app for on-the-go access`,
+
+    "technical features": `Technical capabilities include:
+    • React + Vite web application
+    • Firebase backend integration
+    • Real-time tracking systems
+    • AI-powered automation
+    • Secure authentication
+    • Cloud-based infrastructure`,
+
+    "help": `I can help you with information about:
+    • Main Platform Features
+    • Emergency Services
+    • Safety Systems
+    • Waste Management
+    • Transportation
+    • Healthcare Services
+    • Police Services
+    • Community Features
+    • Access Instructions
+    • Technical Details
+
+  What would you like to know about?`
   };
 
   // Scroll to bottom when messages change
@@ -58,92 +135,8 @@ const Chatbot: React.FC = () => {
     }
   }, [isOpen]);
 
-  const checkFAQs = (input: string): string | null => {
-    const lowercaseInput = input.toLowerCase();
-    
-    if (lowercaseInput === 'help') {
-      return "I can help you with:\n• Smart City Features\n• Transportation Services\n• Waste Management\n• Energy Systems\n\nWhat would you like to know about?";
-    }
-
-    for (const [key, value] of Object.entries(faqs)) {
-      if (lowercaseInput.includes(key)) {
-        return value;
-      }
-    }
-    return null;
-  };
-
-  const getAIResponse = async (userInput: string) => {
-    console.log('Starting API request...');
-    
-    // First check FAQs
-    const faqResponse = checkFAQs(userInput);
-    if (faqResponse) {
-      console.log('FAQ match found, returning response without API call');
-      return faqResponse;
-    }
-
-    try {
-      const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
-      if (!apiKey) {
-        throw new Error('OpenAI API key not found. Please check your .env file.');
-      }
-
-      const response = await fetch('https://api.openai.com/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`
-        },
-        body: JSON.stringify({
-          model: "gpt-3.5-turbo",
-          messages: [
-            {
-              role: "system",
-              content: "You are an AI assistant for Atlantis Smart City. Provide concise, helpful information about the city's services and features. Keep responses under 100 words."
-            },
-            {
-              role: "user",
-              content: userInput
-            }
-          ],
-          max_tokens: 150,
-          temperature: 0.7,
-          presence_penalty: 0.6,
-          frequency_penalty: 0.5
-        })
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(`API Error: ${errorData.error?.message || response.statusText}`);
-      }
-
-      const data = await response.json();
-      console.log('API response received:', data);
-
-      if (!data.choices || !data.choices[0]?.message?.content) {
-        throw new Error('Invalid response format from OpenAI API');
-      }
-
-      return data.choices[0].message.content.trim();
-
-    } catch (error) {
-      console.error('API request failed:', error);
-      if (error instanceof Error) {
-        if (error.message.includes('API key')) {
-          return "Configuration error: API key not found. Please contact support.";
-        }
-        if (error.message.includes('429')) {
-          return "I'm receiving too many requests right now. Please try again in a moment.";
-        }
-      }
-      throw error;
-    }
-  };
-
   const handleSend = async () => {
-    if (!input.trim() || isLoading) return;
+    if (!input.trim()) return;
     
     const userMessage: Message = { 
       text: input, 
@@ -151,34 +144,43 @@ const Chatbot: React.FC = () => {
       id: generateId() 
     };
 
-    setIsLoading(true);
     setMessages(prev => [...prev, userMessage]);
-    
+
+    // Show typing indicator
+    const typingMessage: Message = {
+      text: "Typing...",
+      isUser: false,
+      id: 'typing'
+    };
+    setMessages(prev => [...prev, typingMessage]);
+
     try {
       const response = await getAIResponse(input);
-      const aiMessage: Message = { 
-        text: response || "I'm sorry, I couldn't process that request.", 
-        isUser: false,
-        id: generateId()
-      };
       
-      setMessages(prev => [...prev, aiMessage]);
+      // Remove typing indicator and add AI response
+      setMessages(prev => 
+        prev.filter(m => m.id !== 'typing').concat({
+          text: response,
+          isUser: false,
+          id: generateId()
+        })
+      );
     } catch (error) {
-      console.error('Error in handleSend:', error);
-      const errorMessage: Message = {
-        text: "Oops! Something went wrong. Please try again.",
-        isUser: false,
-        id: generateId()
-      };
-      setMessages(prev => [...prev, errorMessage]);
-    } finally {
-      setIsLoading(false);
-      setInput('');
+      console.error('AI Error:', error);
+      setMessages(prev => 
+        prev.filter(m => m.id !== 'typing').concat({
+          text: "I'm having trouble right now. Please try again later.",
+          isUser: false,
+          id: generateId()
+        })
+      );
     }
+
+    setInput('');
   };
 
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' && !isLoading) {
+    if (e.key === 'Enter') {
       handleSend();
     }
   };
@@ -224,7 +226,7 @@ const Chatbot: React.FC = () => {
 
           {/* Messages */}
           <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-gray-900 scrollbar-thin scrollbar-thumb-blue-600">
-            {messages.map((msg, index) => (
+            {messages.map((msg) => (
               <div
                 key={msg.id}
                 className={`flex ${msg.isUser ? 'justify-end' : 'justify-start'} items-end space-x-2 
@@ -249,26 +251,11 @@ const Chatbot: React.FC = () => {
               </div>
             ))}
             
-            {/* Loading Indicator with Enhanced Animation */}
-            {isLoading && (
-              <div className="flex justify-start items-center space-x-2 
-                animate-[slideInLeft_0.3s_ease-out]">
-                <Loader2 
-                  size={20} 
-                  className="text-blue-500 animate-spin" 
-                />
-                <div className="bg-gray-800 text-white rounded-lg p-3 
-                  animate-[pulse_1.5s_infinite]">
-                  Analyzing your request...
-                </div>
-              </div>
-            )}
-            
             {/* Scroll Anchor */}
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Input Area with Enhanced Interactivity */}
+          {/* Input Area */}
           <div className="border-t border-gray-800 p-6 bg-gray-900 rounded-b-2xl">
             <div className="flex space-x-2 relative">
               <input
@@ -277,16 +264,14 @@ const Chatbot: React.FC = () => {
                 onChange={(e) => setInput(e.target.value)}
                 onKeyPress={handleKeyPress}
                 placeholder="Ask me about Atlantis..."
-                disabled={isLoading}
                 className="flex-1 border border-gray-700 bg-gray-800 text-white rounded-full px-6 py-3 
                   focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent 
                   transition-all duration-300 hover:border-blue-300
-                  disabled:opacity-50 disabled:cursor-not-allowed
                   animate-[slideInUp_0.3s_ease-out]"
               />
               <button
                 onClick={handleSend}
-                disabled={isLoading || !input.trim()}
+                disabled={!input.trim()}
                 className={`bg-blue-600 text-white rounded-full p-3 
                   hover:shadow-lg transition-all duration-200 hover:scale-110 transform
                   disabled:opacity-50 disabled:cursor-not-allowed
@@ -307,61 +292,3 @@ const Chatbot: React.FC = () => {
 };
 
 export default Chatbot;
-
-// Custom Tailwind animations
-const customAnimations = `
-@keyframes typeIn {
-  from {
-    opacity: 0;
-    transform: scale(0.9);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-@keyframes slideInRight {
-  from {
-    opacity: 0;
-    transform: translateX(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-@keyframes slideInLeft {
-  from {
-    opacity: 0;
-    transform: translateX(-20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-@keyframes scaleIn {
-  from {
-    opacity: 0;
-    transform: scale(0.9);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-@keyframes popIn {
-  from {
-    opacity: 0;
-    transform: scale(0.7);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-`;

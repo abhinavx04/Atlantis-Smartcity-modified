@@ -1,3 +1,4 @@
+import { db, auth } from '../firebase/config';
 import { 
   collection, 
   addDoc, 
@@ -6,106 +7,182 @@ import {
   query, 
   where, 
   getDocs,
-  GeoPoint,
-  Timestamp 
+  onSnapshot,
+  serverTimestamp,
+  GeoPoint 
 } from 'firebase/firestore';
-import { db, auth } from '../firebase/config';
-import { Ride, RideRequest, Location, User, Route } from '../types/transportation';
+import { RideRequest, RideOffer, RideLocation } from '../types/transportation';
 
-export class TransportationService {
+class TransportationService {
   private ridesCollection = collection(db, 'rides');
   private requestsCollection = collection(db, 'rideRequests');
   private usersCollection = collection(db, 'users');
 
-  async createRide(rideData: Omit<Ride, 'id' | 'createdAt' | 'updatedAt'>) {
-    try {
-      const currentUser = auth.currentUser;
-      if (!currentUser) throw new Error('User not authenticated');
+  async createRideOffer(offer: Omit<RideOffer, 'id'>): Promise<string> {
+    const user = auth.currentUser;
+    if (!user) throw new Error('User not authenticated');
 
-      const ride = {
-        ...rideData,
-        driver: currentUser.uid,
-        passengers: [],
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        status: 'pending'
-      };
+    const offerData = {
+      ...offer,
+      driverId: user.uid,
+      timestamp: serverTimestamp(),
+      status: 'active',
+      passengers: []
+    };
 
-      const docRef = await addDoc(this.ridesCollection, ride);
-      return docRef.id;
-    } catch (error) {
-      console.error('Error creating ride:', error);
-      throw error;
-    }
+    const docRef = await addDoc(this.ridesCollection, offerData);
+    return docRef.id;
   }
 
-  async searchRides(pickup: Location, dropoff: Location, departureTime: Date) {
-    try {
-      // This is a simple implementation. In production, you'd want to use
-      // geohashing or a more sophisticated search algorithm
-      const q = query(
-        this.ridesCollection,
-        where('status', '==', 'pending'),
-        where('departureTime', '>=', departureTime)
-      );
+  async createRideRequest(request: Omit<RideRequest, 'id'>): Promise<string> {
+    const user = auth.currentUser;
+    if (!user) throw new Error('User not authenticated');
 
-      const querySnapshot = await getDocs(q);
-      const rides: Ride[] = [];
+    const requestData = {
+      ...request,
+      userId: user.uid,
+      timestamp: serverTimestamp(),
+      status: 'pending',
+      paymentStatus: 'pending'
+    };
 
-      querySnapshot.forEach((doc) => {
-        const ride = { id: doc.id, ...doc.data() } as Ride;
-        // Filter rides based on proximity to pickup/dropoff
-        if (this.isLocationNearby(ride.route.startLocation, pickup, 5) && 
-            this.isLocationNearby(ride.route.endLocation, dropoff, 5)) {
+    const docRef = await addDoc(this.requestsCollection, requestData);
+    return docRef.id;
+  }
+
+  async findNearbyRides(
+    pickup: RideLocation,
+    dropoff: RideLocation,
+    maxDistance: number = 5 // km
+  ): Promise<RideOffer[]> {
+    const q = query(
+      this.ridesCollection,
+      where('status', '==', 'active')
+    );
+
+    const querySnapshot = await getDocs(q);
+    const rides: RideOffer[] = [];
+
+    querySnapshot.forEach((doc) => {
+      const ride = { id: doc.id, ...doc.data() } as RideOffer;
+      if (this.isLocationNearby(ride.route.pickup, pickup, maxDistance) &&
+          this.isLocationNearby(ride.route.dropoff, dropoff, maxDistance)) {
+        rides.push(ride);
+      }
+    });
+
+    return rides;
+  }
+
+  // Real-time listeners
+  subscribeToRideUpdates(rideId: string, callback: (ride: RideOffer) => void) {
+    return onSnapshot(doc(db, 'rides', rideId), (snapshot) => {
+      if (snapshot.exists()) {
+        callback({ id: snapshot.id, ...snapshot.data() } as RideOffer);
+      }
+    });
+  }
+
+  subscribeToNearbyRides(location: RideLocation, callback: (rides: RideOffer[]) => void) {
+    const now = new Date('2025-02-18T10:12:26Z'); // Current system time
+    
+    const q = query(
+      this.ridesCollection,
+      where('status', '==', 'active'),
+      where('departureTime', '>=', now)
+    );
+
+    return onSnapshot(q, (snapshot) => {
+      const rides: RideOffer[] = [];
+      snapshot.forEach((doc) => {
+        const ride = { id: doc.id, ...doc.data() } as RideOffer;
+        if (this.isLocationNearby(ride.route.pickup, location, 5)) {
           rides.push(ride);
         }
       });
-
-      return rides;
-    } catch (error) {
-      console.error('Error searching rides:', error);
-      throw error;
-    }
+      callback(rides);
+    });
   }
 
-  private isLocationNearby(loc1: Location, loc2: Location, kmThreshold: number): boolean {
-    // Haversine formula to calculate distance between two points
+  async bookRide(rideId: string, userId: string = 'abhinavx04'): Promise<void> {
+    const rideRef = doc(db, 'rides', rideId);
+    const ride = (await getDocs(query(this.ridesCollection, where('id', '==', rideId)))).docs[0];
+
+    if (!ride) {
+      throw new Error('Ride not found');
+    }
+
+    const rideData = ride.data() as RideOffer;
+    if (rideData.availableSeats <= 0) {
+      throw new Error('No seats available');
+    }
+
+    await updateDoc(rideRef, {
+      availableSeats: rideData.availableSeats - 1,
+      passengers: [...rideData.passengers, userId],
+      lastUpdated: serverTimestamp()
+    });
+
+    // Create a booking record
+    await addDoc(collection(db, 'bookings'), {
+      rideId,
+      userId,
+      status: 'confirmed',
+      bookedAt: serverTimestamp(),
+      fareAmount: rideData.fare,
+      paymentStatus: 'pending'
+    });
+  }
+
+  async cancelRide(rideId: string, userId: string = 'abhinavx04'): Promise<void> {
+    const rideRef = doc(db, 'rides', rideId);
+    const ride = (await getDocs(query(this.ridesCollection, where('id', '==', rideId)))).docs[0];
+
+    if (!ride) {
+      throw new Error('Ride not found');
+    }
+
+    const rideData = ride.data() as RideOffer;
+    await updateDoc(rideRef, {
+      availableSeats: rideData.availableSeats + 1,
+      passengers: rideData.passengers.filter(id => id !== userId),
+      lastUpdated: serverTimestamp()
+    });
+
+    // Update booking status
+    const bookingQuery = query(
+      collection(db, 'bookings'),
+      where('rideId', '==', rideId),
+      where('userId', '==', userId)
+    );
+
+    const bookingDocs = await getDocs(bookingQuery);
+    bookingDocs.forEach(async (bookingDoc) => {
+      await updateDoc(doc(db, 'bookings', bookingDoc.id), {
+        status: 'cancelled',
+        cancelledAt: serverTimestamp()
+      });
+    });
+  }
+
+  private isLocationNearby(loc1: RideLocation, loc2: RideLocation, maxDistance: number): boolean {
     const R = 6371; // Earth's radius in km
-    const dLat = this.toRad(loc2.lat - loc1.lat);
-    const dLon = this.toRad(loc2.lng - loc1.lng);
-    const lat1 = this.toRad(loc1.lat);
-    const lat2 = this.toRad(loc2.lat);
+    const lat1 = this.toRad(loc1.latitude);
+    const lat2 = this.toRad(loc2.latitude);
+    const dLat = this.toRad(loc2.latitude - loc1.latitude);
+    const dLon = this.toRad(loc2.longitude - loc1.longitude);
 
     const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-              Math.sin(dLon/2) * Math.sin(dLon/2) * Math.cos(lat1) * Math.cos(lat2);
+              Math.cos(lat1) * Math.cos(lat2) *
+              Math.sin(dLon/2) * Math.sin(dLon/2);
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
     const d = R * c;
 
-    return d <= kmThreshold;
+    return d <= maxDistance;
   }
 
   private toRad(value: number): number {
     return value * Math.PI / 180;
-  }
-
-  async requestRide(rideId: string, pickup: Location, dropoff: Location) {
-    try {
-      const currentUser = auth.currentUser;
-      if (!currentUser) throw new Error('User not authenticated');
-
-      const request: Omit<RideRequest, 'id'> = {
-        user: currentUser.uid as any,
-        pickup,
-        dropoff,
-        requestTime: new Date(),
-        status: 'pending'
-      };
-
-      return await addDoc(this.requestsCollection, request);
-    } catch (error) {
-      console.error('Error requesting ride:', error);
-      throw error;
-    }
   }
 }
 

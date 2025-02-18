@@ -1,48 +1,48 @@
-export interface User {
-    uid: string;
-    displayName: string;
-    email: string;
-    phoneNumber?: string;
-    homeAddress?: Location;
-    workAddress?: Location;
-    preferredRoutes?: Route[];
-    rating?: number;
-    totalRides?: number;
-  }
-  
-  export interface Location {
-    lat: number;
-    lng: number;
+export interface RideLocation {
+    latitude: number;
+    longitude: number;
     address: string;
     placeId?: string;
   }
   
-  export interface Route {
-    startLocation: Location;
-    endLocation: Location;
-    waypoints?: Location[];
-    distance?: number;
-    duration?: number;
-  }
-  
-  export interface Ride {
-    id: string;
-    driver: User;
-    passengers: User[];
-    maxPassengers: number;
-    route: Route;
-    departureTime: Date;
-    status: 'pending' | 'active' | 'completed' | 'cancelled';
-    fare: number;
-    createdAt: Date;
-    updatedAt: Date;
-  }
-  
   export interface RideRequest {
     id: string;
-    user: User;
-    pickup: Location;
-    dropoff: Location;
-    requestTime: Date;
-    status: 'pending' | 'accepted' | 'rejected';
+    userId: string;
+    userProfile: {
+      name: string;
+      phone: string;
+      rating: number;
+    };
+    pickup: RideLocation;
+    dropoff: RideLocation;
+    timestamp: Date;
+    status: 'pending' | 'accepted' | 'inProgress' | 'completed' | 'cancelled';
+    fare: number;
+    paymentStatus: 'pending' | 'completed';
+    rideType: 'carpool' | 'taxi' | 'auto';
+  }
+  
+  export interface RideOffer {
+    id: string;
+    driverId: string;
+    driverProfile: {
+      name: string;
+      phone: string;
+      rating: number;
+      vehicleDetails: {
+        model: string;
+        number: string;
+        color: string;
+      };
+    };
+    route: {
+      pickup: RideLocation;
+      dropoff: RideLocation;
+      waypoints?: RideLocation[];
+    };
+    availableSeats: number;
+    departureTime: Date;
+    fare: number;
+    status: 'active' | 'inProgress' | 'completed' | 'cancelled';
+    passengers: string[]; // Array of user IDs
   }

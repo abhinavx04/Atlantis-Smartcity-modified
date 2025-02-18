@@ -184,9 +184,9 @@ const Login: React.FC<LoginProps> = ({ onClose }) => {
         <div className="relative w-full max-w-md mx-auto px-12 py-16">
           <div className="mb-12 text-center">
             <h2 className="text-4xl font-light text-white mb-3">
-              Welcome Back
+              Namaste
             </h2>
-            <p className="text-white/50">Sign in to continue</p>
+            <p className="text-white/50">Sign in to enter our paradise </p>
           </div>
 
           {error && (

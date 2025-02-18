@@ -5,10 +5,12 @@ import Announcement from './components/Announcement';
 import Emergency from './components/Emergency/Emergency';
 import Events from './components/Events';
 import Transportation from './components/Transportations/Transportation';  // Update path
+import Chatbot from './components/Chatbot';
 
 function App() {
   return (
     <Router>
+      <Chatbot />
       <Routes>
         <Route path="/" element={<Landing />} />
         <Route path="/home" element={<Home />} />

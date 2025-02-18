@@ -9,7 +9,7 @@ const Footer: React.FC = () => {
       <div className="container mx-auto px-4 py-4 text-center">
         {/* About Section */}
         <div className="mb-2">
-          <h3 className="font-['Syncopate'] text-xl text-white mb-2">ATLANTIS</h3>
+          <h3 className="font-['Syncopate'] text-xl text-white mb-2">DWARKA</h3>
           <p className="text-gray-400 text-sm">
             Building a smarter, more connected future through innovative urban solutions 
             and sustainable development.

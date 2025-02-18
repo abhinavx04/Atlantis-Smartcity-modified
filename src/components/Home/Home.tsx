@@ -9,7 +9,6 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import Navbar from '../Navbar';  // Add this import
 import AnimatedTagline from './AnimatedTagline';
 import Footer from './Footer';
-import Explore from './Explore';
 import SmartCityDescription from './SmartCityDescription';
 
 gsap.registerPlugin(ScrollTrigger);
@@ -291,9 +290,6 @@ const Home: React.FC = () => {
         <AnimatedTagline />
         <SmartCityDescription />
       </div>
-
-      {/* Explore section */}
-      <Explore />
 
       {/* News section - moved to bottom */}
       <section className="relative z-10 py-20 bg-black/50 backdrop-blur-sm">

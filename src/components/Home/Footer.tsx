@@ -1,65 +1,49 @@
 import React from 'react';
+import gmail from '../../assets/gmail.png';
+import twitter from '../../assets/twitter.png';
+import instagram from '../../assets/instagram.png';
 
 const Footer: React.FC = () => {
   return (
     <footer className="relative z-10 bg-gray-900/50 backdrop-blur-sm border-t border-gray-800/50">
-      <div className="container mx-auto px-4 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {/* About Section */}
-          <div>
-            <h3 className="font-['Syncopate'] text-xl text-white mb-4">ATLANTIS</h3>
-            <p className="text-gray-400 text-sm">
-              Building a smarter, more connected future through innovative urban solutions 
-              and sustainable development.
+      <div className="container mx-auto px-4 py-4 text-center">
+        {/* About Section */}
+        <div className="mb-2">
+          <h3 className="font-['Syncopate'] text-xl text-white mb-2">ATLANTIS</h3>
+          <p className="text-gray-400 text-sm">
+            Building a smarter, more connected future through innovative urban solutions 
+            and sustainable development.
+          </p>
+        </div>
+
+        {/* Contact Info */}
+        <div className="mb-2">
+          <h4 className="font-['Syncopate'] text-lg text-white mb-2">CONNECT</h4>
+          <div className="space-y-1 text-sm">
+            <p className="text-gray-400">
+              <span className="text-blue-400">Address:</span> 123 Dwarka, the Gatway to Moksha
             </p>
-          </div>
-
-          {/* Quick Links */}
-          <div>
-            <h4 className="font-['Syncopate'] text-lg text-white mb-4">QUICK LINKS</h4>
-            <ul className="space-y-2">
-              {['Emergency', 'Transport', 'Events', 'Weather', 'News'].map((item) => (
-                <li key={item}>
-                  <a 
-                    href={`#${item.toLowerCase()}`}
-                    className="text-gray-400 hover:text-blue-400 text-sm transition-colors duration-200"
-                  >
-                    {item}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Contact Info */}
-          <div>
-            <h4 className="font-['Syncopate'] text-lg text-white mb-4">CONNECT</h4>
-            <div className="space-y-2 text-sm">
-              <p className="text-gray-400">
-                <span className="text-blue-400">Email:</span> contact@atlantis.city
-              </p>
-              <p className="text-gray-400">
-                <span className="text-blue-400">Emergency:</span> 100
-              </p>
-              <div className="flex space-x-4 mt-4">
-                {['Twitter', 'Facebook', 'LinkedIn'].map((social) => (
-                  <a
-                    key={social}
-                    href={`#${social.toLowerCase()}`}
-                    className="text-blue-400 hover:text-blue-300 transition-colors duration-200"
-                  >
-                    {social}
-                  </a>
-                ))}
-              </div>
+            <p className="text-gray-400">
+              <span className="text-blue-400">Contact Us:</span> 033 000 000
+            </p>
+            <div className="flex justify-center space-x-3 mt-2">
+              <a href="mailto:contact@atlantis.city" target="_blank" rel="noreferrer">
+                <img src={gmail} alt="Gmail" className="w-6 h-6 filter invert brightness-0" />
+              </a>
+              <a href="https://twitter.com/theatlantis_sc" target="_blank" rel="noreferrer">
+                <img src={twitter} alt="Twitter" className="w-6 h-6 filter invert brightness-0" />
+              </a>
+              <a href="https://www.instagram.com/theatlantis_sc/" target="_blank" rel="noreferrer">
+                <img src={instagram} alt="Instagram" className="w-6 h-6 filter invert brightness-0" />
+              </a>
             </div>
           </div>
         </div>
 
         {/* Copyright */}
-        <div className="mt-8 pt-8 border-t border-gray-800/50 text-center">
+        <div className="mt-4 pt-2 border-t border-gray-800/50">
           <p className="text-gray-500 text-sm">
-            © {new Date().getFullYear()} Atlantis Smart City. All rights reserved.
+            &copy; {new Date().getFullYear()} Atlantis Smart City. All rights reserved.
           </p>
         </div>
       </div>

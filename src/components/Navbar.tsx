@@ -10,10 +10,11 @@ interface NavbarProps {
 const navItems = [
   { name: 'Events', path: '/events' },
   { name: 'Emergency', path: '/emergency' },
-  { name: 'Announcements', path: '/announcements' }, // Changed to lowercase
+  { name: 'Announcements', path: '/announcements' },
   { name: 'Transportation', path: '/transport' },
   { name: 'Alerts', path: '/alerts' },
   { name: 'Ambulance', path: '/ambulance' },
+  { name: 'E-Voting', path: '/evoting' }, // Added E-Voting link
 ];
 
 const Navbar: React.FC<NavbarProps> = ({ currentUser }) => {

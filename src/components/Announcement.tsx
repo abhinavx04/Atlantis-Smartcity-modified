@@ -1,9 +1,8 @@
-import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import React, { useState, useLayoutEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { gsap } from 'gsap';
+import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import Navbar from './Navbar'; // Import the Navbar component
+import Navbar from './Navbar';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -12,8 +11,8 @@ interface Announcement {
   title: string;
   description: string;
   date: string;
-  priority?: 'high' | 'medium' | 'low';
-  category?: string;
+  priority: string;
+  category: string;
   image?: string;
 }
 
@@ -25,27 +24,78 @@ const Announcement: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   
   // Current time and user for Navbar
-  const currentTime = '2025-02-17 17:40:03';
-  const currentUser = 'Kpandey2207';
+  const currentTime = '2025-02-18 03:20:49';
+  const currentUser = 'abhinavx04';
 
   // Sample categories
   const categories = ['all', 'general', 'emergency', 'event', 'maintenance'];
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     fetchAnnouncements();
     checkAdminStatus();
-    initializeAnimations();
-  }, []);
+    const ctx = gsap.context(() => {
+      // Header Animations
+      const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
+      
+      tl.from(".announcement-header h1", {
+        y: 100,
+        opacity: 0,
+        duration: 1,
+      })
+      .from(".announcement-header p", {
+        y: 50,
+        opacity: 0,
+        duration: 0.8,
+      }, "-=0.5")
+      .from(".controls-section", {
+        y: 30,
+        opacity: 0,
+        duration: 0.8,
+      }, "-=0.3");
 
-  const initializeAnimations = () => {
-    gsap.from('.announcement-content', {
-      duration: 1,
-      y: 20,
-      opacity: 0,
-      ease: 'power4.out',
-      delay: 0.5,
+      // Cards Animation
+      const cards = gsap.utils.toArray(".announcement-card");
+      cards.forEach((card, i) => {
+        gsap.from(card, {
+          scrollTrigger: {
+            trigger: card as Element,
+            start: "top bottom-=100",
+            end: "top center",
+            toggleActions: "play none none reverse",
+          },
+          y: 50,
+          opacity: 0,
+          duration: 0.6,
+          delay: i * 0.1,
+        });
+      });
+
+      // Background Animations
+      gsap.to(".floating-circuit", {
+        y: -1000,
+        x: 1000,
+        opacity: 0,
+        duration: "random(7,12)",
+        stagger: {
+          each: 1,
+          repeat: -1,
+        },
+        ease: "none",
+      });
+
+      gsap.to(".digital-rain", {
+        y: "100vh",
+        duration: "random(5,8)",
+        stagger: {
+          each: 0.2,
+          repeat: -1,
+        },
+        ease: "none",
+      });
     });
-  };
+
+    return () => ctx.revert();
+  }, []);
 
   // Simulated API call with sample data
   const fetchAnnouncements = async () => {
@@ -70,7 +120,6 @@ const Announcement: React.FC = () => {
           category: "event",
           image: "https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80"
         },
-        // Add more sample announcements as needed
       ];
 
       setAnnouncements(sampleAnnouncements);
@@ -108,7 +157,7 @@ const Announcement: React.FC = () => {
     return (
       <>
         <Navbar currentTime={currentTime} currentUser={currentUser} />
-        <div className="flex justify-center items-center h-screen bg-gray-900">
+        <div className="flex justify-center items-center h-screen bg-black">
           <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-blue-500"></div>
         </div>
       </>
@@ -116,35 +165,71 @@ const Announcement: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900">
-      {/* Include Navbar at the top */}
+    <div className="min-h-screen bg-black relative overflow-hidden">
+      {/* Background Effects */}
+      <div className="absolute inset-0">
+        {/* Smart City Grid */}
+        <div className="absolute inset-0 bg-[radial-gradient(#1e3a8a_1px,transparent_1px)] [background-size:40px_40px] opacity-5" />
+        
+        {/* Floating Circuit Lines */}
+        <div className="absolute inset-0 overflow-hidden">
+          {[...Array(6)].map((_, i) => (
+            <div
+              key={i}
+              className="floating-circuit absolute h-[2px] w-[100px] bg-blue-500/20"
+              style={{
+                top: `${Math.random() * 100}%`,
+                left: `${Math.random() * 100}%`,
+                transform: `rotate(${i * 60}deg)`,
+              }}
+            />
+          ))}
+        </div>
+
+        {/* Digital Rain */}
+        <div className="absolute inset-0 opacity-10">
+          {[...Array(10)].map((_, i) => (
+            <div
+              key={i}
+              className="digital-rain absolute top-0 w-[1px] h-20 bg-gradient-to-b from-transparent via-blue-500 to-transparent"
+              style={{
+                left: `${i * 10}%`,
+                transform: 'translateY(-100%)',
+              }}
+            />
+          ))}
+        </div>
+      </div>
+
       <Navbar currentTime={currentTime} currentUser={currentUser} />
 
-      <div className="pt-20 pb-12 px-4">
+      <div className="pt-20 pb-12 px-4 relative z-10">
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="max-w-6xl mx-auto announcement-content"
+          className="max-w-6xl mx-auto"
         >
           {/* Header Section */}
           <div className="announcement-header text-center mb-12">
-            <h1 className="text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-blue-600 mb-4">
-              📢 City Announcements
+            <h1 className="text-5xl md:text-7xl font-['Syncopate'] text-white mb-4 tracking-wider">
+              ANNOUNCEMENTS
             </h1>
-            <p className="text-gray-400 text-lg">Stay updated with the latest news and events</p>
+            <p className="text-2xl md:text-3xl text-blue-400/80 text-center mb-24 font-light">
+              Stay connected with the latest updates
+            </p>
           </div>
 
           {/* Controls Section */}
-          <div className="flex flex-col md:flex-row justify-between items-center mb-8 space-y-4 md:space-y-0">
+          <div className="controls-section flex flex-col md:flex-row justify-between items-center mb-8 space-y-4 md:space-y-0">
             <div className="flex space-x-2 overflow-x-auto pb-2 w-full md:w-auto">
               {categories.map((category) => (
                 <button
                   key={category}
                   onClick={() => setSelectedCategory(category)}
-                  className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
+                  className={`px-4 py-2 rounded-full text-sm font-['Syncopate'] tracking-wide transition-all duration-300 ${
                     selectedCategory === category
                       ? 'bg-blue-500 text-white'
-                      : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+                      : 'bg-gray-800/50 text-gray-300 hover:bg-gray-700/50'
                   }`}
                 >
                   {category.charAt(0).toUpperCase() + category.slice(1)}
@@ -158,7 +243,7 @@ const Announcement: React.FC = () => {
                 placeholder="Search announcements..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full px-4 py-2 bg-gray-800 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-2 bg-gray-800/50 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
           </div>
@@ -175,7 +260,7 @@ const Announcement: React.FC = () => {
                   exit={{ opacity: 0, scale: 0.9 }}
                   className="announcement-card group"
                 >
-                  <div className="bg-gray-800 rounded-xl overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2">
+                  <div className="bg-gray-800/80 backdrop-blur-md rounded-xl overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border border-blue-500/20">
                     {announcement.image && (
                       <div className="relative h-48 overflow-hidden">
                         <img
@@ -189,7 +274,7 @@ const Announcement: React.FC = () => {
                     
                     <div className="p-6">
                       <div className="flex items-center justify-between mb-4">
-                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${getPriorityColor(announcement.priority)} text-white`}>
+                        <span className={`px-3 py-1 rounded-full text-xs font-['Syncopate'] tracking-wider ${getPriorityColor(announcement.priority)} text-white`}>
                           {announcement.priority?.toUpperCase() || 'NORMAL'}
                         </span>
                         <span className="text-gray-400 text-sm">
@@ -202,7 +287,7 @@ const Announcement: React.FC = () => {
                         </span>
                       </div>
                       
-                      <h2 className="text-2xl font-bold text-white mb-3 group-hover:text-blue-400 transition-colors duration-300">
+                      <h2 className="text-xl font-['Syncopate'] text-white mb-3 group-hover:text-blue-400 transition-colors duration-300 tracking-wide">
                         {announcement.title}
                       </h2>
                       

@@ -5,6 +5,7 @@ import Announcement from './components/Announcement/Announcement';
 import Emergency from './components/Emergency/Emergency';
 import Events from './components/Events';
 import Transportation from './components/Transportations/Transportation';
+import Alerts from './components/Alerts/Alerts';
 import Chatbot from './components/Chatbot';
 
 function App() {
@@ -18,7 +19,7 @@ function App() {
             <Chatbot />
           </>
         } />
-        <Route path="/announcements" element={
+        <Route path="/announcement" element={
           <>
             <Announcement />
             <Chatbot />
@@ -36,12 +37,13 @@ function App() {
             <Chatbot />
           </>
         } />
-        <Route path="/transport" element={
+        <Route path="/transportation" element={
           <>
             <Transportation />
             <Chatbot />
           </>
         } />
+        <Route path="/alerts" element={<Alerts />} />
       </Routes>
     </Router>
   );

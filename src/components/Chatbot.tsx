@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { MessageCircle, X, Send } from 'lucide-react';
 import { getAIResponse } from '../services/gemini';
+import { useNavigate } from 'react-router-dom';
 
 interface Message {
   text: string;
@@ -42,6 +43,7 @@ const TypeWriter: React.FC<TypeWriterProps> = ({ text, speed = 50 }) => {
 };
 
 const Chatbot: React.FC = () => {
+  const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
@@ -146,15 +148,6 @@ const Chatbot: React.FC = () => {
   What would you like to know about?`
   };
 
-  // Scroll to bottom when messages change
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
-
   // Generate unique ID for messages
   const generateId = () => Math.random().toString(36).substr(2, 9);
 
@@ -180,6 +173,19 @@ const Chatbot: React.FC = () => {
     setMessages(prev => [...prev, userMessage]);
     setInput('');
 
+    // Check for SOS command
+    if (input.toLowerCase() === 'sos') {
+      setMessages(prev => [...prev, {
+        text: "Redirecting you to emergency services...",
+        isUser: false,
+        id: generateId()
+      }]);
+      setTimeout(() => {
+        navigate('/emergency');
+      }, 1500); // Short delay to show the message
+      return;
+    }
+
     // Add typing indicator
     const typingMessage: Message = {
       text: "▋",
@@ -191,23 +197,20 @@ const Chatbot: React.FC = () => {
     try {
       const response = await getAIResponse(input);
       // Remove typing indicator and add AI response
-      setMessages(prev => 
-        prev.filter(m => m.id !== 'typing').concat({
-          text: response,
-          isUser: false,
-          id: generateId(),
-        })
-      );
-      scrollToBottom();
+      setMessages(prev => prev.filter(msg => msg.id !== 'typing'));
+      setMessages(prev => [...prev, {
+        text: response,
+        isUser: false,
+        id: generateId()
+      }]);
     } catch (error) {
-      console.error('AI Error:', error);
-      setMessages(prev => 
-        prev.filter(m => m.id !== 'typing').concat({
-          text: "I'm having trouble right now. Please try again later.",
-          isUser: false,
-          id: generateId()
-        })
-      );
+      console.error('Error getting AI response:', error);
+      setMessages(prev => prev.filter(msg => msg.id !== 'typing'));
+      setMessages(prev => [...prev, {
+        text: "I apologize, but I'm having trouble processing your request. Please try again later.",
+        isUser: false,
+        id: generateId()
+      }]);
     }
   };
 
@@ -286,9 +289,6 @@ const Chatbot: React.FC = () => {
                 </div>
               </div>
             ))}
-            
-            {/* Scroll Anchor */}
-            <div ref={messagesEndRef} />
           </div>
 
           {/* Input Area */}

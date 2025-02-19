@@ -137,11 +137,11 @@ const SmartCityDescription: React.FC = () => {
           className="max-w-4xl mx-auto text-center space-y-8"
         >
           <p className="text-gray-300 text-lg leading-relaxed">
-            A smart city is a municipality that makes use of information and communication technology (ICT) to boost administrative effectiveness, disseminate information to the general public, and enhance the standard of public services as well as the welfare of its residents.
+            A place where governance is at your fingertips, where your voice is heard, and where safety isn’t a privilege but a right. It’s a city that sees before disasters strike, that moves before emergencies escalate, that connects people not just digitally, but in purpose. It’s where innovation doesn’t just build skyscrapers—it builds trust, security, and a future that belongs to everyone.
           </p>
           
-          <p className="text-gray-400 text-lg leading-relaxed">
-            While the precise definition varies, a smart city's primary goal is to use smart technology and data analysis to optimise local operations, spur economic growth, and enhance residents' quality of life. The smart city's worth is determined by how it chooses to use its technology, not just how much of it it may have.
+          <p className="text-gray-300 text-lg leading-relaxed">
+          Dwarka is a living, breathing symphony of technology and humanity—a place where innovation serves the people. It’s a city that listens, adapts, and evolves, to make life richer, safer, and more connected. It’s not just about automation; it’s about harmony—between people, nature, and progress. A smart city is a dream realized, a future embraced, and a promise that technology can make life not just easier, but more meaningful.
           </p>
 
           {/* Additional decorative element */}

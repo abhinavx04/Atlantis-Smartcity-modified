@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { MessageCircle, X, Send } from 'lucide-react';
 import { getAIResponse } from '../services/gemini';
+import { useNavigate } from 'react-router-dom';
 
 interface Message {
   text: string;
@@ -42,6 +43,7 @@ const TypeWriter: React.FC<TypeWriterProps> = ({ text, speed = 50 }) => {
 };
 
 const Chatbot: React.FC = () => {
+  const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
@@ -146,15 +148,6 @@ const Chatbot: React.FC = () => {
   What would you like to know about?`
   };
 
-  // Scroll to bottom when messages change
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
-
   // Generate unique ID for messages
   const generateId = () => Math.random().toString(36).substr(2, 9);
 
@@ -179,7 +172,19 @@ const Chatbot: React.FC = () => {
 
     setMessages(prev => [...prev, userMessage]);
     setInput('');
-    scrollToBottom(); // Scroll to bottom after adding user message
+
+    // Check for SOS command
+    if (input.toLowerCase() === 'sos') {
+      setMessages(prev => [...prev, {
+        text: "Redirecting you to emergency services...",
+        isUser: false,
+        id: generateId()
+      }]);
+      setTimeout(() => {
+        navigate('/emergency');
+      }, 1500); // Short delay to show the message
+      return;
+    }
 
     // Add typing indicator
     const typingMessage: Message = {
@@ -188,29 +193,24 @@ const Chatbot: React.FC = () => {
       id: 'typing'
     };
     setMessages(prev => [...prev, typingMessage]);
-    scrollToBottom(); // Scroll to bottom after adding typing indicator
 
     try {
       const response = await getAIResponse(input);
       // Remove typing indicator and add AI response
-      setMessages(prev => 
-        prev.filter(m => m.id !== 'typing').concat({
-          text: response,
-          isUser: false,
-          id: generateId(),
-        })
-      );
-      scrollToBottom(); // Scroll to bottom after adding AI response
+      setMessages(prev => prev.filter(msg => msg.id !== 'typing'));
+      setMessages(prev => [...prev, {
+        text: response,
+        isUser: false,
+        id: generateId()
+      }]);
     } catch (error) {
-      console.error('AI Error:', error);
-      setMessages(prev => 
-        prev.filter(m => m.id !== 'typing').concat({
-          text: "I'm having trouble right now. Please try again later.",
-          isUser: false,
-          id: generateId()
-        })
-      );
-      scrollToBottom(); // Scroll to bottom after error message
+      console.error('Error getting AI response:', error);
+      setMessages(prev => prev.filter(msg => msg.id !== 'typing'));
+      setMessages(prev => [...prev, {
+        text: "I apologize, but I'm having trouble processing your request. Please try again later.",
+        isUser: false,
+        id: generateId()
+      }]);
     }
   };
 
@@ -238,11 +238,12 @@ const Chatbot: React.FC = () => {
         <MessageCircle size={24} className="animate-pulse" />
       </button>
 
-      <div>
-        {`absolute bottom-0 right-0 transition-all duration-300 transform
-              ${isOpen 
-              ? 'scale-100 opacity-100 animate-[slideInUp_0.3s_ease-out]' 
-              : 'scale-95 opacity-0 pointer-events-none'}`}
+      <div
+        className={`absolute bottom-0 right-0 transition-all duration-300 transform
+          ${isOpen 
+            ? 'scale-100 opacity-100 animate-[slideInUp_0.3s_ease-out]' 
+            : 'scale-95 opacity-0 pointer-events-none'}`}
+      >
         <div className="bg-gray-900 rounded-2xl shadow-2xl w-96 h-[32rem] flex flex-col backdrop-blur-sm border border-gray-800">
           {/* Header */}
           <div className="bg-gray-950 text-white p-6 rounded-t-2xl flex justify-between items-center">
@@ -288,9 +289,6 @@ const Chatbot: React.FC = () => {
                 </div>
               </div>
             ))}
-            
-            {/* Scroll Anchor */}
-            <div ref={messagesEndRef} />
           </div>
 
           {/* Input Area */}

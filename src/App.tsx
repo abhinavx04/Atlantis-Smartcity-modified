@@ -10,14 +10,38 @@ import Chatbot from './components/Chatbot';
 function App() {
   return (
     <Router>
-      <Chatbot />
       <Routes>
         <Route path="/" element={<Landing />} />
-        <Route path="/home" element={<Home />} />
-        <Route path="/announcements" element={<Announcement />} />
-        <Route path="/emergency" element={<Emergency />} />
-        <Route path="/events" element={<Events />} />
-        <Route path="/transport" element={<Transportation />} />
+        <Route path="/home" element={
+          <>
+            <Home />
+            <Chatbot />
+          </>
+        } />
+        <Route path="/announcements" element={
+          <>
+            <Announcement />
+            <Chatbot />
+          </>
+        } />
+        <Route path="/emergency" element={
+          <>
+            <Emergency />
+            <Chatbot />
+          </>
+        } />
+        <Route path="/events" element={
+          <>
+            <Events />
+            <Chatbot />
+          </>
+        } />
+        <Route path="/transport" element={
+          <>
+            <Transportation />
+            <Chatbot />
+          </>
+        } />
       </Routes>
     </Router>
   );

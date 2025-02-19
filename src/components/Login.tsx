@@ -18,29 +18,39 @@ const Login: React.FC<LoginProps> = ({ onClose }) => {
   // Updated check admin status function with better logging
   const checkAdminStatus = async (uid: string) => {
     try {
-      console.log('Checking admin status for user:', uid);
+      console.log('🔍 Starting admin status check for UID:', uid);
       const userRef = doc(db, 'users', uid);
       const userDoc = await getDoc(userRef);
-      console.log('User document exists:', userDoc.exists());
-
+      
+      console.log('📄 User document exists:', userDoc.exists());
+      console.log('📧 Current email:', email);
+      console.log('👑 Admin email match:', email === import.meta.env.VITE_ADMIN_EMAIL);
+  
       if (userDoc.exists()) {
         const userData = userDoc.data();
-        console.log('Full user data:', userData);
-
+        console.log('👤 User data:', {
+          email: userData.email,
+          isAdmin: userData.isAdmin,
+          createdAt: userData.createdAt?.toDate?.(),
+          lastLogin: userData.lastLogin?.toDate?.()
+        });
+  
         if (!userData.hasOwnProperty('isAdmin')) {
-          // If isAdmin field doesn't exist, add it
-          await updateDoc(userRef, {
-            isAdmin: email === 'abhinavpillai92@gmail.com' // Set true for specific admin email
-          });
-          return email === 'abhinavpillai92@gmail.com';
+          console.log('⚠️ No isAdmin field found, creating one...');
+          const isAdmin = email === import.meta.env.VITE_ADMIN_EMAIL;
+          await updateDoc(userRef, { isAdmin });
+          console.log('✅ isAdmin field set to:', isAdmin);
+          return isAdmin;
         }
-
+  
+        console.log('🔑 Final admin status:', userData.isAdmin);
         return userData.isAdmin === true;
       }
-
+  
+      console.log('❌ User document not found');
       return false;
     } catch (error) {
-      console.error('Error checking admin status:', error);
+      console.error('🚫 Error checking admin status:', error);
       return false;
     }
   };
@@ -83,31 +93,33 @@ const Login: React.FC<LoginProps> = ({ onClose }) => {
 
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('🔄 Login attempt for:', email);
+    
     if (!email || !password) {
       setError('Please fill in all fields');
       return;
     }
+    
     setLoading(true);
     setError('');
 
     try {
-      console.log('Attempting email login for:', email);
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      console.log('User authenticated:', userCredential.user.uid);
+      console.log('✅ User authenticated:', userCredential.user.uid);
 
       await createOrUpdateUser(userCredential.user.uid, email);
       const isAdmin = await checkAdminStatus(userCredential.user.uid);
-      console.log('Is user admin?', isAdmin);
+      console.log('👑 Admin status check result:', isAdmin);
 
       if (isAdmin) {
-        console.log('Redirecting to admin dashboard');
+        console.log('🎯 Admin login successful - redirecting to home');
         navigate('/home');
       } else {
-        console.log('Regular user login - redirecting to home');
+        console.log('👤 Regular user login - redirecting to home');
         navigate('/home');
       }
     } catch (err: any) {
-      console.error('Login error:', err);
+      console.error('❌ Login error:', err);
       switch (err.code) {
         case 'auth/invalid-email':
           setError('Invalid email address');

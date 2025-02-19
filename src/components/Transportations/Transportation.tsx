@@ -1,11 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { auth } from '../../firebase/config';
-import { LoadScript, GoogleMap, Marker } from '@react-google-maps/api';
 import { transportationService } from '../../services/transportationservice';
+import { notificationService } from '../../services/notificationService';
 import { RideOffer } from '../../types/transportation';
+import { Notification } from '../../types/notification';
 import Navbar from '../Navbar';
-import { GOOGLE_MAPS_API_KEY } from '../Emergency/constants';
+import FindRideForm from './FindRideForm';
+import OfferRideForm from './OfferRideForm';
+import RideBookingModal from './RideBookingModal';
+import NotificationPopup from '../Notifications/NotificationPopup';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const Transportation: React.FC = () => {
   const navigate = useNavigate();
@@ -14,18 +19,36 @@ const Transportation: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [selectedRide, setSelectedRide] = useState<RideOffer | null>(null);
   const [activeTab, setActiveTab] = useState<'find' | 'offer'>('find');
-
-  const mapCenter = { lat: 28.5921, lng: 77.0460 }; // Dwarka coordinates
-  const mapContainerStyle = {
-    width: '100%',
-    height: '400px',
-    borderRadius: '0.75rem'
-  };
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [userName, setUserName] = useState<string>('');
 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((user) => {
       if (user) {
-        setCurrentUser(user.email);
+        setCurrentUser(user.uid);
+        setUserName(user.displayName || user.email?.split('@')[0] || 'Anonymous');
+        
+        // Subscribe to rides
+        const unsubscribeRides = transportationService.subscribeToNearbyRides(
+          { latitude: 0, longitude: 0, address: '' },
+          (rides) => {
+            setAvailableRides(rides);
+            setLoading(false);
+          }
+        );
+
+        // Subscribe to notifications
+        const unsubscribeNotifications = notificationService.subscribeToNotifications(
+          user.uid,
+          (newNotifications) => {
+            setNotifications(newNotifications);
+          }
+        );
+
+        return () => {
+          unsubscribeRides();
+          unsubscribeNotifications();
+        };
       } else {
         navigate('/');
       }
@@ -34,26 +57,117 @@ const Transportation: React.FC = () => {
     return () => unsubscribe();
   }, [navigate]);
 
-  const handleOfferRide = () => {
-    // Add your ride offer logic here
-    console.log('Offering a ride');
+  const handleRideSelect = (ride: RideOffer) => {
+    setSelectedRide(ride);
   };
 
-  const handleFindRide = () => {
-    // Add your ride search logic here
-    console.log('Finding a ride');
+  const handleBookRide = async (ride: RideOffer) => {
+    try {
+      const user = auth.currentUser;
+      if (!user) throw new Error('Not authenticated');
+
+      // Create the ride request
+      const rideRequest = {
+        userId: user.uid,
+        userProfile: {
+          name: userName,
+          phone: '',
+          rating: 5
+        },
+        pickup: ride.route.pickup,
+        dropoff: ride.route.dropoff,
+        timestamp: new Date(),
+        status: 'pending',
+        fare: ride.fare,
+        paymentStatus: 'pending',
+        rideType: 'carpool'
+      };
+
+      await transportationService.createRideRequest(rideRequest);
+
+      // Create notification for the driver
+      await notificationService.createNotification({
+        type: 'RIDE_REQUEST',
+        rideId: ride.id,
+        fromUserId: user.uid,
+        fromUserName: userName,
+        toUserId: ride.driverId,
+        message: `New ride request from ${userName}`,
+        rideDetails: {
+          pickup: ride.route.pickup.address,
+          dropoff: ride.route.dropoff.address,
+          fare: ride.fare,
+          departureTime: ride.departureTime,
+          passengerName: userName
+        }
+      });
+
+      setSelectedRide(null);
+      alert('Ride request sent successfully!');
+    } catch (error) {
+      console.error('Error booking ride:', error);
+      alert('Failed to book ride. Please try again.');
+    }
+  };
+
+  const handleAcceptRide = async (notification: Notification) => {
+    try {
+      await transportationService.updateRideStatus(notification.rideId, 'accepted');
+      
+      await notificationService.createNotification({
+        type: 'RIDE_ACCEPTED',
+        rideId: notification.rideId,
+        fromUserId: currentUser!,
+        fromUserName: userName,
+        toUserId: notification.fromUserId,
+        message: `${userName} has accepted your ride request!`,
+        rideDetails: notification.rideDetails
+      });
+
+      await notificationService.markAsRead(notification.id!);
+      alert('Ride request accepted!');
+    } catch (error) {
+      console.error('Error accepting ride:', error);
+      alert('Failed to accept ride. Please try again.');
+    }
+  };
+
+  const handleRejectRide = async (notification: Notification) => {
+    try {
+      await transportationService.updateRideStatus(notification.rideId, 'rejected');
+      
+      await notificationService.createNotification({
+        type: 'RIDE_REJECTED',
+        rideId: notification.rideId,
+        fromUserId: currentUser!,
+        fromUserName: userName,
+        toUserId: notification.fromUserId,
+        message: `${userName} has rejected your ride request.`,
+        rideDetails: notification.rideDetails
+      });
+
+      await notificationService.markAsRead(notification.id!);
+      alert('Ride request rejected.');
+    } catch (error) {
+      console.error('Error rejecting ride:', error);
+      alert('Failed to reject ride. Please try again.');
+    }
+  };
+
+  const handleCloseNotification = async (notificationId: string) => {
+    await notificationService.markAsRead(notificationId);
   };
 
   return (
     <div className="min-h-screen bg-black relative overflow-hidden">
       <div className="absolute inset-0 bg-[radial-gradient(#1e3a8a_1px,transparent_1px)] [background-size:40px_40px] opacity-5" />
       
-      <Navbar currentUser={currentUser || ''} />
+      <Navbar currentUser={userName} />
 
       <div className="container mx-auto px-4 py-24">
         <div className="bg-gray-800/50 backdrop-blur-sm rounded-lg border border-gray-700/50 p-6">
           <h1 className="text-3xl font-['Syncopate'] text-white mb-6 tracking-wider">
-            TRANSPORTATION
+            SMART TRANSPORTATION
           </h1>
 
           {/* Tab buttons */}
@@ -80,89 +194,110 @@ const Transportation: React.FC = () => {
             </button>
           </div>
 
-          {/* Action buttons */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-            <button
-              onClick={handleOfferRide}
-              className="px-6 py-4 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 transition-colors duration-300 border border-blue-500/20"
-            >
-              Create New Ride Offer
-            </button>
-            <button
-              onClick={handleFindRide}
-              className="px-6 py-4 rounded-lg bg-green-500/10 hover:bg-green-500/20 text-green-400 transition-colors duration-300 border border-green-500/20"
-            >
-              Search Available Rides
-            </button>
-          </div>
-
-          {/* Map */}
-          <div className="mb-8">
-            <LoadScript googleMapsApiKey={GOOGLE_MAPS_API_KEY}>
-              <GoogleMap
-                mapContainerStyle={mapContainerStyle}
-                center={mapCenter}
-                zoom={12}
-                options={{
-                  styles: [
-                    {
-                      featureType: 'all',
-                      elementType: 'geometry',
-                      stylers: [{ color: '#242f3e' }]
-                    },
-                    {
-                      featureType: 'all',
-                      elementType: 'labels.text.stroke',
-                      stylers: [{ color: '#242f3e' }]
-                    },
-                    {
-                      featureType: 'all',
-                      elementType: 'labels.text.fill',
-                      stylers: [{ color: '#746855' }]
-                    }
-                  ]
-                }}
-              >
-                {availableRides.map((ride) => (
-                  <Marker
-                    key={ride.id}
-                    position={{
-                      lat: ride.route.pickup.latitude,
-                      lng: ride.route.pickup.longitude
-                    }}
-                    onClick={() => setSelectedRide(ride)}
-                  />
-                ))}
-              </GoogleMap>
-            </LoadScript>
-          </div>
-
-          {/* Available Rides */}
-          {loading ? (
-            <div className="flex justify-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {availableRides.map((ride) => (
-                <div
-                  key={ride.id}
-                  onClick={() => setSelectedRide(ride)}
-                  className="bg-gray-700/50 hover:bg-gray-600/50 p-6 rounded-lg cursor-pointer transition-all duration-300"
-                >
-                  <h3 className="text-white font-medium mb-2">
-                    {ride.route.pickup.address} → {ride.route.dropoff.address}
-                  </h3>
-                  <p className="text-gray-400">
-                    Departure: {new Date(ride.departureTime).toLocaleString()}
-                  </p>
-                  <p className="text-blue-400 font-bold mt-2">₹{ride.fare}</p>
+          {/* Forms */}
+          <div className="grid grid-cols-1 gap-8">
+            {activeTab === 'find' ? (
+              <div>
+                <FindRideForm />
+                {/* Available rides list */}
+                <div className="mt-8 space-y-4">
+                  <h3 className="text-xl text-white mb-4">Available Rides</h3>
+                  {loading ? (
+                    <div className="flex justify-center items-center py-8">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+                    </div>
+                  ) : availableRides.length === 0 ? (
+                    <p className="text-gray-400 text-center py-8">No rides available at the moment.</p>
+                  ) : (
+                    availableRides.map((ride) => (
+                      <motion.div
+                        key={ride.id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="bg-gray-700/30 p-6 rounded-lg cursor-pointer hover:bg-gray-600/50 transition-all duration-300"
+                        onClick={() => handleRideSelect(ride)}
+                      >
+                        <div className="flex justify-between items-start">
+                          <div className="space-y-2">
+                            <div className="flex items-center space-x-3">
+                              {ride.driverProfile.photoURL && (
+                                <img
+                                  src={ride.driverProfile.photoURL}
+                                  alt={ride.driverProfile.name}
+                                  className="w-10 h-10 rounded-full"
+                                />
+                              )}
+                              <div>
+                                <p className="text-white font-medium">{ride.driverProfile.name}</p>
+                                <div className="flex text-yellow-400 text-sm">
+                                  {'★'.repeat(Math.round(ride.driverProfile.rating || 5))}
+                                </div>
+                              </div>
+                            </div>
+                            <p className="text-gray-300">
+                              <span className="text-gray-400">From: </span>
+                              {ride.route.pickup.address}
+                            </p>
+                            <p className="text-gray-300">
+                              <span className="text-gray-400">To: </span>
+                              {ride.route.dropoff.address}
+                            </p>
+                            <p className="text-gray-300 text-sm">
+                              {new Date(ride.departureTime).toLocaleString()}
+                            </p>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-blue-400 font-bold text-xl">₹{ride.fare}</p>
+                            <p className="text-gray-400 text-sm mt-1">
+                              {ride.availableSeats} seats available
+                            </p>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleRideSelect(ride);
+                              }}
+                              className="mt-4 px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                            >
+                              Book Now
+                            </button>
+                          </div>
+                        </div>
+                      </motion.div>
+                    ))
+                  )}
                 </div>
-              ))}
-            </div>
-          )}
+              </div>
+            ) : (
+              <OfferRideForm />
+            )}
+          </div>
         </div>
       </div>
+
+      {/* Booking Modal */}
+      {selectedRide && (
+        <RideBookingModal
+          ride={selectedRide}
+          onClose={() => setSelectedRide(null)}
+          onConfirm={handleBookRide}
+        />
+      )}
+
+      {/* Notifications */}
+      <AnimatePresence>
+        {notifications.map((notification, index) => (
+          <NotificationPopup
+            key={notification.id}
+            notification={notification}
+            onAccept={() => handleAcceptRide(notification)}
+            onReject={() => handleRejectRide(notification)}
+            onClose={() => handleCloseNotification(notification.id!)}
+            style={{
+              bottom: `${(index * 120) + 16}px`
+            }}
+          />
+        ))}
+      </AnimatePresence>
     </div>
   );
 };

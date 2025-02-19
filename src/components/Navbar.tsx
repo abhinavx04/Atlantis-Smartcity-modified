@@ -2,18 +2,20 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { signOut, onAuthStateChanged } from 'firebase/auth';
 import { auth } from '../firebase/config';
+import logo from '../assets/logo.svg'; // Adjust the import path if needed
 
 interface NavbarProps {
   currentUser: string;
 }
 
 const navItems = [
+  { name: 'Announcements', path: '/announcements' },
   { name: 'Events', path: '/events' },
   { name: 'Emergency', path: '/emergency' },
-  { name: 'Announcements', path: '/announcements' }, // Changed to lowercase
   { name: 'Transportation', path: '/transport' },
-  { name: 'Alerts', path: '/alerts' },
-  { name: 'Ambulance', path: '/ambulance' },
+  { name: 'Connect', path: '/connect' },
+  { name: 'E-Voting', path: '/vote' },
+  { name: 'Alerts', path: '/alerts' }
 ];
 
 const Navbar: React.FC<NavbarProps> = ({ currentUser }) => {
@@ -38,6 +40,18 @@ const Navbar: React.FC<NavbarProps> = ({ currentUser }) => {
     } catch (error) {
       console.error('Error logging out:', error);
     }
+  };
+
+  const scrollToTop = () => {
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
+  };
+
+  const handleLogoClick = () => {
+    scrollToTop();
+    navigate('/home');
   };
 
   return (
@@ -142,10 +156,18 @@ const Navbar: React.FC<NavbarProps> = ({ currentUser }) => {
               transform: translateY(0);
             }
           }
+
+          /* Make navbar fixed */
+          .fixed-top {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 50;
+          }
         `}
       </style>
 
-      <nav className="nav-border-animation fixed top-0 left-0 right-0 z-50">
+      <nav className="nav-border-animation fixed-top">
         <div className="bg-black bg-opacity-80 backdrop-blur-sm">
           <div 
             className="max-w-7xl mx-auto px-4"
@@ -154,27 +176,31 @@ const Navbar: React.FC<NavbarProps> = ({ currentUser }) => {
             }}
           >
             <div className="flex items-center justify-between h-16">
-              <div className="flex items-center space-x-8">
+              <div className="flex items-center space-x-2 cursor-pointer" onClick={handleLogoClick}>
+                <img 
+                  src={logo} 
+                  alt="Logo" 
+                  className="w-8 h-8" 
+                />
                 <span 
-                  className="nav-logo text-2xl text-white font-medium tracking-wider hover:text-blue-400 transition-colors duration-300 cursor-pointer"
+                  className="nav-logo text-2xl text-white font-medium tracking-wider hover:text-blue-400 transition-colors duration-300"
                   style={{ fontFamily: 'Syncopate, sans-serif' }}
-                  onClick={() => navigate('/home')}
                 >
                   DWARKA
                 </span>
+              </div>
                 
-                <div className="hidden md:flex space-x-1">
-                  {navItems.map((item) => (
-                    <button
-                      key={item.name}
-                      onClick={() => navigate(item.path)}
-                      className="nav-item text-gray-300 hover:text-blue-400 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300"
-                      style={{ fontFamily: 'Space Grotesk, sans-serif' }}
-                    >
-                      {item.name}
-                    </button>
-                  ))}
-                </div>
+              <div className="hidden md:flex space-x-1">
+                {navItems.map((item) => (
+                  <button
+                    key={item.name}
+                    onClick={() => navigate(item.path)}
+                    className="nav-item text-gray-300 hover:text-blue-400 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300"
+                    style={{ fontFamily: 'Space Grotesk, sans-serif' }}
+                  >
+                    {item.name}
+                  </button>
+                ))}
               </div>
               
               <div className="relative">

@@ -179,6 +179,7 @@ const Chatbot: React.FC = () => {
 
     setMessages(prev => [...prev, userMessage]);
     setInput('');
+    scrollToBottom(); // Scroll to bottom after adding user message
 
     // Add typing indicator
     const typingMessage: Message = {
@@ -187,6 +188,7 @@ const Chatbot: React.FC = () => {
       id: 'typing'
     };
     setMessages(prev => [...prev, typingMessage]);
+    scrollToBottom(); // Scroll to bottom after adding typing indicator
 
     try {
       const response = await getAIResponse(input);
@@ -198,7 +200,7 @@ const Chatbot: React.FC = () => {
           id: generateId(),
         })
       );
-      scrollToBottom();
+      scrollToBottom(); // Scroll to bottom after adding AI response
     } catch (error) {
       console.error('AI Error:', error);
       setMessages(prev => 
@@ -208,6 +210,7 @@ const Chatbot: React.FC = () => {
           id: generateId()
         })
       );
+      scrollToBottom(); // Scroll to bottom after error message
     }
   };
 
@@ -235,12 +238,11 @@ const Chatbot: React.FC = () => {
         <MessageCircle size={24} className="animate-pulse" />
       </button>
 
-      <div
-        className={`absolute bottom-0 right-0 transition-all duration-300 transform
-          ${isOpen 
-            ? 'scale-100 opacity-100 animate-[slideInUp_0.3s_ease-out]' 
-            : 'scale-95 opacity-0 pointer-events-none'}`}
-      >
+      <div>
+        {`absolute bottom-0 right-0 transition-all duration-300 transform
+              ${isOpen 
+              ? 'scale-100 opacity-100 animate-[slideInUp_0.3s_ease-out]' 
+              : 'scale-95 opacity-0 pointer-events-none'}`}
         <div className="bg-gray-900 rounded-2xl shadow-2xl w-96 h-[32rem] flex flex-col backdrop-blur-sm border border-gray-800">
           {/* Header */}
           <div className="bg-gray-950 text-white p-6 rounded-t-2xl flex justify-between items-center">

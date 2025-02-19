@@ -151,7 +151,7 @@ const Login: React.FC<LoginProps> = ({ onClose }) => {
       const isAdmin = await checkAdminStatus(result.user.uid);
 
       if (isAdmin) {
-        navigate('/admin/dashboard');
+        navigate('/home');
       } else {
         navigate('/home');
       }

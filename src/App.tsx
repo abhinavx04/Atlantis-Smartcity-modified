@@ -6,7 +6,7 @@ import Emergency from './components/Emergency/Emergency';
 import Events from './components/Events';
 import Transportation from './components/Transportations/Transportation';
 import Chatbot from './components/Chatbot';
-
+import ProfilePage from './components/ProfilePage';
 function App() {
   return (
     <Router>

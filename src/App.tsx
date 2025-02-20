@@ -11,6 +11,7 @@ function App() {
   return (
     <Router>
       <Routes>
+      <Route path="/profile" element={<ProfilePage />} />
         <Route path="/" element={<Landing />} />
         <Route path="/home" element={
           <>

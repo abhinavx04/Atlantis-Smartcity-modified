@@ -1,5 +1,5 @@
 import React from 'react';
-import { Outlet, useNavigate, useLocation } from 'react-router-dom';
+import { Outlet, useNavigate, useLocation, Link } from 'react-router-dom';
 import Navbar from '../Navbar';
 
 const EVotingDashboard: React.FC = () => {
@@ -7,25 +7,19 @@ const EVotingDashboard: React.FC = () => {
   const location = useLocation();
   const currentUser = 'abhinavx04'; // This should come from your auth context
 
-  // Update the paths to match the App.tsx routes
+  // Fix the paths to match App.tsx route configuration
   const navItems = [
     { name: 'Active Issues', path: '/vote' },
-    { name: 'Create Issue', path: '/vote/create' },
+    { name: 'Create Issue', path: '/vote/create' }, // Changed from /evoting/createIssue
     { name: 'My Votes', path: '/vote/my-votes' },
   ];
 
-  // Update the active path check to handle nested routes
+  // Updated active path check to handle nested routes
   const isActivePath = (path: string) => {
     if (path === '/vote') {
       return location.pathname === '/vote';
     }
-    return location.pathname === path;
-  };
-
-  // Add click handler with preventDefault
-  const handleNavigation = (e: React.MouseEvent, path: string) => {
-    e.preventDefault();
-    navigate(path);
+    return location.pathname.startsWith(path);
   };
 
   return (
@@ -44,12 +38,12 @@ const EVotingDashboard: React.FC = () => {
           </p>
         </div>
 
-        {/* Updated Navigation Tabs */}
+        {/* Updated Navigation using Links instead of buttons */}
         <div className="flex space-x-4 mb-8">
           {navItems.map((item) => (
-            <button
+            <Link
               key={item.name}
-              onClick={(e) => handleNavigation(e, item.path)}
+              to={item.path}
               className={`
                 px-6 py-3 rounded-lg text-sm font-medium transition-all duration-300
                 ${isActivePath(item.path)
@@ -59,7 +53,7 @@ const EVotingDashboard: React.FC = () => {
               `}
             >
               {item.name}
-            </button>
+            </Link>
           ))}
         </div>
 

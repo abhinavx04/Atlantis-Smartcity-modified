@@ -6,11 +6,12 @@ import Emergency from './components/Emergency/Emergency';
 import Events from './components/Events';
 import Transportation from './components/Transportations/Transportation';
 import Chatbot from './components/Chatbot';
-// Add new imports
 import EVotingDashboard from './components/EVoting/EVotingDashboard';
 import IssueList from './components/EVoting/IssueList';
 import CreateIssue from './components/EVoting/CreateIssue';
 import MyVotes from './components/EVoting/MyVotes';
+import ProfilePage from './components/ProfilePage';
+import { CommunityChannel } from './components/Community/CommunityChannel';
 
 function App() {
   return (
@@ -18,10 +19,12 @@ function App() {
       <Routes>
         <Route path="/" element={<Landing />} />
         <Route path="/home" element={
-          <>
+          <div className="relative min-h-screen">
             <Home />
-            <Chatbot />
-          </>
+            <div className="fixed bottom-4 right-4 z-50">
+              <Chatbot />
+            </div>
+          </div>
         } />
         <Route path="/announcements" element={
           <>
@@ -47,17 +50,19 @@ function App() {
             <Chatbot />
           </>
         } />
-        {/* Add E-Voting routes */}
-        <Route path="/vote" element={
-          <>
-            <EVotingDashboard />
-            <Chatbot />
-          </>
-        }>
+        <Route path="/vote" element={<EVotingDashboard />}>
           <Route index element={<IssueList />} />
           <Route path="create" element={<CreateIssue />} />
           <Route path="my-votes" element={<MyVotes />} />
         </Route>
+        <Route path="/community" element={
+          <div className="relative min-h-screen">
+            <CommunityChannel />
+            <div className="fixed bottom-4 right-4 z-50">
+              <Chatbot />
+            </div>
+          </div>
+        } />
       </Routes>
     </Router>
   );

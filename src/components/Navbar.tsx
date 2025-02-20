@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { signOut, onAuthStateChanged } from 'firebase/auth';
 import { auth } from '../firebase/config';
 import logo from '../assets/logo.svg'; // Adjust the import path if needed
@@ -13,7 +13,7 @@ const navItems = [
   { name: 'Events', path: '/events' },
   { name: 'Emergency', path: '/emergency' },
   { name: 'Transportation', path: '/transport' },
-  { name: 'Connect', path: '/connect' },
+  { name: 'Community', path: '/community' },
   { name: 'E-Voting', path: '/vote' },
   { name: 'Alerts', path: '/alerts' }
 ];
@@ -192,14 +192,14 @@ const Navbar: React.FC<NavbarProps> = ({ currentUser }) => {
                 
               <div className="hidden md:flex space-x-1">
                 {navItems.map((item) => (
-                  <button
+                  <Link
                     key={item.name}
-                    onClick={() => navigate(item.path)}
+                    to={item.path}
                     className="nav-item text-gray-300 hover:text-blue-400 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300"
                     style={{ fontFamily: 'Space Grotesk, sans-serif' }}
                   >
                     {item.name}
-                  </button>
+                  </Link>
                 ))}
               </div>
               

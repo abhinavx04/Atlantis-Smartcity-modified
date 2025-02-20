@@ -193,21 +193,15 @@ const Navbar: React.FC<NavbarProps> = ({ currentUser }) => {
                 
               <div className="hidden md:flex space-x-1">
                 {navItems.map((item) => (
-                  <button
+                  <Link
                     key={item.name}
-                    onClick={() => navigate(item.path)}
+                    to={item.path}
                     className="nav-item text-gray-300 hover:text-blue-400 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300"
                     style={{ fontFamily: 'Space Grotesk, sans-serif' }}
                   >
                     {item.name}
-                  </button>
+                  </Link>
                 ))}
-                <Link 
-                  to="/community"
-                  className="nav-link"
-                >
-                  Community
-                </Link>
               </div>
               
               <div className="relative">

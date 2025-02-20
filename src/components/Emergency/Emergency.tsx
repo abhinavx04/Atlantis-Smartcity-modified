@@ -703,6 +703,16 @@ const Emergency: React.FC = () => {
 };
 
 // Helper component for Quick Action buttons
+const getButtonStyles = (color: string) => {
+  const colorMap = {
+    'red': 'bg-red-500/20 hover:bg-red-500/30 border-red-500/30 text-red-400',
+    'purple': 'bg-purple-500/20 hover:bg-purple-500/30 border-purple-500/30 text-purple-400',
+    'blue': 'bg-blue-500/20 hover:bg-blue-500/30 border-blue-500/30 text-blue-400',
+    'green': 'bg-green-500/20 hover:bg-green-500/30 border-green-500/30 text-green-400'
+  };
+  return colorMap[color as keyof typeof colorMap] || colorMap.blue;
+};
+
 const QuickActionButton: React.FC<{
   icon: string;
   label: string;
@@ -714,14 +724,13 @@ const QuickActionButton: React.FC<{
     whileHover={{ scale: 1.05 }}
     whileTap={{ scale: 0.95 }}
     onClick={onClick}
-    className={`bg-${color}-500/20 hover:bg-${color}-500/30 
-                border border-${color}-500/30 rounded-xl p-4 text-center`}
+    className={`${getButtonStyles(color)} rounded-xl p-4 text-center border`}
   >
     <div className="text-3xl mb-2">{icon}</div>
-    <h3 className={`text-${color}-400 font-medium`}>{label}</h3>
-    <p className={`text-${color}-300 text-sm`}>{number}</p>
+    <h3 className="font-medium">{label}</h3>
+    <p className="text-sm opacity-80">{number}</p>
   </motion.button>
-  );
+);
 
-  // Export the Emergency component
-  export default Emergency;
+// Export the Emergency component
+export default Emergency;

@@ -6,8 +6,13 @@ import Emergency from './components/Emergency/Emergency';
 import Events from './components/Events';
 import Transportation from './components/Transportations/Transportation';
 import Chatbot from './components/Chatbot';
+import EVotingDashboard from './components/EVoting/EVotingDashboard';
+import IssueList from './components/EVoting/IssueList';
+import CreateIssue from './components/EVoting/CreateIssue';
+import MyVotes from './components/EVoting/MyVotes';
 import ProfilePage from './components/ProfilePage';
 import { CommunityChannel } from './components/Community/CommunityChannel';
+import Alerts from './components/Alerts/Alerts';
 
 function App() {
   return (
@@ -47,6 +52,18 @@ function App() {
             <Chatbot />
           </>
         } />
+        {/* Add the new Alerts route */}
+        <Route path="/alerts" element={
+          <>
+            <Alerts />
+            <Chatbot />
+          </>
+        } />
+        <Route path="/vote" element={<EVotingDashboard />}>
+          <Route index element={<IssueList />} />
+          <Route path="create" element={<CreateIssue />} />
+          <Route path="my-votes" element={<MyVotes />} />
+        </Route>
         <Route path="/community" element={
           <div className="relative min-h-screen">
             <CommunityChannel />

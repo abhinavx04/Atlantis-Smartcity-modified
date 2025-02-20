@@ -7,16 +7,20 @@ import Events from './components/Events';
 import Transportation from './components/Transportations/Transportation';
 import Chatbot from './components/Chatbot';
 import ProfilePage from './components/ProfilePage';
+import { CommunityChannel } from './components/Community/CommunityChannel';
+
 function App() {
   return (
     <Router>
       <Routes>
         <Route path="/" element={<Landing />} />
         <Route path="/home" element={
-          <>
+          <div className="relative min-h-screen">
             <Home />
-            <Chatbot />
-          </>
+            <div className="fixed bottom-4 right-4 z-50">
+              <Chatbot />
+            </div>
+          </div>
         } />
         <Route path="/announcements" element={
           <>
@@ -41,6 +45,14 @@ function App() {
             <Transportation />
             <Chatbot />
           </>
+        } />
+        <Route path="/community" element={
+          <div className="relative min-h-screen">
+            <CommunityChannel />
+            <div className="fixed bottom-4 right-4 z-50">
+              <Chatbot />
+            </div>
+          </div>
         } />
       </Routes>
     </Router>

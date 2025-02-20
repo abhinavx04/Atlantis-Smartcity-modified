@@ -1,57 +1,32 @@
 import { auth } from '../firebase/config';
-import { 
-  PhoneAuthProvider,
-  RecaptchaVerifier,
-  signInWithCredential
-} from 'firebase/auth';
+import { RecaptchaVerifier, signInWithPhoneNumber } from 'firebase/auth';
 
-class OTPService {
+export class OtpService {
   private recaptchaVerifier: RecaptchaVerifier | null = null;
 
-  initRecaptcha(buttonId: string) {
-    try {
-      this.recaptchaVerifier = new RecaptchaVerifier(auth, buttonId, {
-        size: 'invisible',
-        callback: () => {
-          console.log('reCAPTCHA solved');
-        },
-      });
-      return true;
-    } catch (error) {
-      console.error('Error initializing reCAPTCHA:', error);
-      return false;
-    }
+  setupRecaptcha(elementId: string) {
+    this.recaptchaVerifier = new RecaptchaVerifier(auth, elementId, {
+      size: 'invisible',
+      callback: () => {},
+    });
   }
 
-  async sendOTP(phoneNumber: string): Promise<string> {
+  async sendOtp(phoneNumber: string): Promise<any> {
     try {
       if (!this.recaptchaVerifier) {
-        throw new Error('reCAPTCHA not initialized');
+        throw new Error('Recaptcha not initialized');
       }
-
-      const provider = new PhoneAuthProvider(auth);
-      const verificationId = await provider.verifyPhoneNumber(
+      const confirmationResult = await signInWithPhoneNumber(
+        auth,
         phoneNumber,
         this.recaptchaVerifier
       );
-
-      return verificationId;
+      return confirmationResult;
     } catch (error) {
       console.error('Error sending OTP:', error);
       throw error;
     }
   }
-
-  async verifyOTP(verificationId: string, otp: string) {
-    try {
-      const credential = PhoneAuthProvider.credential(verificationId, otp);
-      const result = await signInWithCredential(auth, credential);
-      return result.user;
-    } catch (error) {
-      console.error('Error verifying OTP:', error);
-      throw error;
-    }
-  }
 }
 
-export const otpService = new OTPService();
+export const otpService = new OtpService();

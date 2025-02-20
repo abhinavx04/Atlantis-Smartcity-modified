@@ -53,7 +53,6 @@ class VotingService {
 
   async voteForIssue(issueId: string, userId: string, deviceInfo: string) {
     try {
-      // Check if user has already voted
       const issueRef = doc(this.issuesCollection, issueId);
       const issueDoc = await getDoc(issueRef);
 
@@ -66,7 +65,6 @@ class VotingService {
         throw new Error('User has already voted');
       }
 
-      // Create vote record
       const vote: Omit<Vote, 'id'> = {
         issueId,
         userId,
@@ -75,7 +73,6 @@ class VotingService {
         verificationHash: this.generateVerificationHash(userId, issueId, deviceInfo)
       };
 
-      // Add vote and update issue
       await Promise.all([
         addDoc(this.votesCollection, vote),
         updateDoc(issueRef, {
@@ -92,30 +89,35 @@ class VotingService {
   }
 
   private generateVerificationHash(userId: string, issueId: string, deviceInfo: string): string {
-    // Simple hash function - can be replaced with more secure one
     const str = `${userId}-${issueId}-${deviceInfo}-${Date.now()}`;
     return Array.from(str)
       .reduce((hash, char) => ((hash << 5) - hash) + char.charCodeAt(0), 0)
       .toString(36);
   }
 
-  async getTopIssues(category?: IssueCategory, limit: number = 10) {
+  async getTopIssues(filter: 'all' | 'active' | 'resolved' = 'all') {
     try {
-      let q = query(
-        this.issuesCollection,
-        orderBy('votes', 'desc'),
-        limit
-      );
-
-      if (category) {
-        q = query(q, where('category', '==', category));
+      let q;
+      if (filter === 'all') {
+        // Simpler query without multiple orderBy
+        q = query(
+          this.issuesCollection,
+          orderBy('createdAt', 'desc')
+        );
+      } else {
+        // Single where clause with single orderBy
+        q = query(
+          this.issuesCollection,
+          where('status', '==', filter),
+          orderBy('createdAt', 'desc')
+        );
       }
 
       const snapshot = await getDocs(q);
       return snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
-      })) as Issue[];
+      }));
     } catch (error) {
       console.error('Error getting top issues:', error);
       throw error;

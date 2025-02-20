@@ -12,6 +12,7 @@ import CreateIssue from './components/EVoting/CreateIssue';
 import MyVotes from './components/EVoting/MyVotes';
 import ProfilePage from './components/ProfilePage';
 import { CommunityChannel } from './components/Community/CommunityChannel';
+import Alerts from './components/Alerts/Alerts';
 
 function App() {
   return (
@@ -47,6 +48,13 @@ function App() {
         <Route path="/transport" element={
           <>
             <Transportation />
+            <Chatbot />
+          </>
+        } />
+        {/* Add the new Alerts route */}
+        <Route path="/alerts" element={
+          <>
+            <Alerts />
             <Chatbot />
           </>
         } />

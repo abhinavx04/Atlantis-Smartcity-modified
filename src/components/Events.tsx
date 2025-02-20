@@ -191,69 +191,75 @@ const Events = () => {
 
   return (
     <div className="min-h-screen bg-black relative overflow-hidden">
+      {/* Background Pattern */}
+      <div className="absolute inset-0 bg-[radial-gradient(#1e3a8a_1px,transparent_1px)] [background-size:40px_40px] opacity-5" />
+      
       <Navbar currentTime={currentTime} currentUser={currentUser} />
 
-      {/* Hero Section with GSAP Animations */}
-      <div className="relative pt-20 pb-10 overflow-hidden">
-        <div className="absolute inset-0">
-          <div className="absolute inset-0 bg-gradient-to-b from-black via-gray-900/20 to-black" />
-        </div>
-
-        <div ref={headerRef} className="relative container mx-auto px-4 pt-10">
+      {/* Hero Section */}
+      <div className="relative pt-24 pb-10">
+        <div ref={headerRef} className="container mx-auto px-4">
           <motion.h1 
-            className="text-5xl md:text-7xl font-['Syncopate'] text-white text-center mb-6 tracking-wider"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-4xl md:text-6xl font-['Syncopate'] text-white text-center mb-6"
           >
             CITY EVENTS
           </motion.h1>
           <motion.p 
-            className="text-2xl md:text-3xl text-blue-400/80 text-center max-w-2xl mx-auto mb-12 font-light"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="text-xl text-blue-400/80 text-center max-w-2xl mx-auto mb-12"
           >
-            Discover and participate in exciting events happening across Atlantis
+            Discover and participate in exciting events happening across the city
           </motion.p>
 
-          {/* Enhanced Search and Filter Section */}
-          <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0 md:space-x-4 mb-12">
-            <div className="flex space-x-2 overflow-x-auto pb-2 w-full md:w-auto">
+          {/* Categories and Search */}
+          <div className="flex flex-col md:flex-row items-center gap-6 max-w-4xl mx-auto mb-12">
+            <div className="flex gap-2 overflow-x-auto scrollbar-thin scrollbar-thumb-blue-500/20 scrollbar-track-transparent pb-2 w-full">
               {categories.map((category) => (
                 <motion.button
                   key={category}
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={() => setSelectedCategory(category)}
-                  className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all duration-300 ${
-                    selectedCategory === category
+                  className={`
+                    px-6 py-3 rounded-lg text-sm font-medium whitespace-nowrap transition-all
+                    ${selectedCategory === category
                       ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/25'
-                      : 'bg-gray-800/40 backdrop-blur-sm text-gray-300 hover:bg-gray-700/50'
-                  }`}
+                      : 'bg-gray-800/40 text-gray-300 hover:bg-gray-700/50 backdrop-blur-sm'
+                    }
+                  `}
                 >
                   {category.charAt(0).toUpperCase() + category.slice(1)}
                 </motion.button>
               ))}
             </div>
 
-            <div className="relative w-full md:w-64">
+            <div className="relative w-full md:w-72">
               <input
                 type="text"
                 placeholder="Search events..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full px-6 py-4 bg-white/5 rounded-full text-white 
-                          placeholder-white/30 outline-none border border-white/10 
-                          focus:border-blue-500/50 transition-colors"
+                className="w-full px-6 py-3 bg-gray-800/40 rounded-lg text-white 
+                        placeholder-gray-400 outline-none border border-gray-700/50 
+                        focus:border-blue-500/50 transition-all backdrop-blur-sm"
               />
             </div>
           </div>
         </div>
       </div>
 
-      {/* Events Grid with GSAP ScrollTrigger */}
-      <div className="relative container mx-auto px-4 pb-20">
+      {/* Events Grid */}
+      <div className="container mx-auto px-4 pb-20">
         {loading ? (
           <div className="flex justify-center items-center h-64">
             <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
           </div>
         ) : (
-          <div ref={eventsRef} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div ref={eventsRef} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             <AnimatePresence>
               {filterEvents().map((event) => (
                 <motion.div
@@ -262,25 +268,24 @@ const Events = () => {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -20 }}
-                  whileHover={{ y: -5 }}
                   className="group cursor-pointer"
                   onClick={() => setSelectedEvent(event)}
                 >
-                  <div className="bg-gray-800/40 backdrop-blur-xl rounded-xl overflow-hidden 
-                                border border-gray-700/30 hover:border-blue-500/30 
-                                transition-all duration-500 hover:shadow-[0_0_30px_rgba(59,130,246,0.2)]">
+                  <div className="bg-gray-800/40 backdrop-blur-sm rounded-xl overflow-hidden 
+                              border border-gray-700/50 hover:border-blue-500/30 
+                              transition-all duration-500 hover:shadow-[0_0_30px_rgba(59,130,246,0.15)]">
                     {event.image && (
-                      <div className="relative h-48 overflow-hidden">
-                        <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-transparent to-transparent z-10" />
+                      <div className="relative h-56 overflow-hidden">
                         <img
                           src={event.image}
                           alt={event.title}
                           className="w-full h-full object-cover transform transition-transform duration-700 
-                                   group-hover:scale-110"
+                                 group-hover:scale-110"
                         />
-                        <div className="absolute bottom-4 left-4 z-20">
-                          <span className="px-3 py-1 bg-blue-500/80 backdrop-blur-sm rounded-full 
-                                         text-sm text-white">
+                        <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-transparent to-transparent" />
+                        <div className="absolute bottom-4 left-4">
+                          <span className="px-3 py-1.5 bg-blue-500/80 backdrop-blur-sm rounded-lg 
+                                       text-sm font-medium text-white">
                             {event.category.toUpperCase()}
                           </span>
                         </div>
@@ -288,34 +293,34 @@ const Events = () => {
                     )}
                     
                     <div className="p-6">
-                      <h3 className="text-xl font-bold text-white mb-2 group-hover:text-blue-400 
-                                   transition-colors duration-300">
+                      <h3 className="text-xl font-bold text-white mb-3 group-hover:text-blue-400 
+                                 transition-colors duration-300">
                         {event.title}
                       </h3>
                       
                       <div className="flex items-center gap-4 text-gray-400 text-sm mb-4">
-                        <div className="flex items-center gap-1">
+                        <div className="flex items-center gap-2">
                           <CalendarIcon className="w-4 h-4" />
                           {new Date(event.startDate).toLocaleDateString()}
                         </div>
-                        <div className="flex items-center gap-1">
+                        <div className="flex items-center gap-2">
                           <LocationIcon className="w-4 h-4" />
                           {event.location}
                         </div>
                       </div>
                       
-                      <p className="text-gray-400 mb-4 line-clamp-2">
+                      <p className="text-gray-400 text-sm mb-4 line-clamp-2">
                         {event.description}
                       </p>
 
                       {event.price && (
-                        <div className="flex justify-between items-center">
-                          <span className="text-green-400">{event.price}</span>
+                        <div className="flex justify-between items-center pt-4 border-t border-gray-700/50">
+                          <span className="text-green-400 font-medium">{event.price}</span>
                           <motion.button
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
                             className="px-4 py-2 bg-blue-500/20 text-blue-400 rounded-lg 
-                                     hover:bg-blue-500/30 transition-colors duration-300"
+                                   hover:bg-blue-500/30 transition-colors duration-300"
                           >
                             Register Now
                           </motion.button>

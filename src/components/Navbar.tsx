@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { signOut, onAuthStateChanged } from 'firebase/auth';
 import { auth } from '../firebase/config';
 import logo from '../assets/logo.svg'; // Adjust the import path if needed
@@ -13,6 +13,7 @@ const navItems = [
   { name: 'Events', path: '/events' },
   { name: 'Emergency', path: '/emergency' },
   { name: 'Transportation', path: '/transport' },
+  { name: 'Community', path: '/community' },  // Add this line
   { name: 'Connect', path: '/connect' },
   { name: 'E-Voting', path: '/vote' },
   { name: 'Alerts', path: '/alerts' }
@@ -201,6 +202,12 @@ const Navbar: React.FC<NavbarProps> = ({ currentUser }) => {
                     {item.name}
                   </button>
                 ))}
+                <Link 
+                  to="/community"
+                  className="nav-link"
+                >
+                  Community
+                </Link>
               </div>
               
               <div className="relative">

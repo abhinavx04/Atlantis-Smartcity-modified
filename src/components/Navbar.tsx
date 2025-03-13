@@ -13,7 +13,8 @@ const navItems = [
   { name: 'Events', path: '/events' },
   { name: 'Emergency', path: '/emergency' },
   { name: 'Transportation', path: '/transport' },
-  { name: 'Community', path: '/community' },
+  { name: 'Community', path: '/community' },  // Add this line
+  // { name: 'Connect', path: '/connect' },
   { name: 'E-Voting', path: '/vote' },
   { name: 'Alerts', path: '/alerts' }
 ];

@@ -1,3 +1,5 @@
+import { Timestamp } from 'firebase/firestore';
+
 export interface Location {
   address: string;
   latitude: number;
@@ -31,7 +33,7 @@ export interface RideOffer {
   fare: number;
   status: 'active' | 'completed' | 'cancelled';
   passengers: string[];
-  createdAt: firebase.firestore.Timestamp; // Firebase Timestamp
+  createdAt: Timestamp; // Updated to use imported Timestamp
 }
 
 export interface RideRequest {

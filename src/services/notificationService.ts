@@ -1,4 +1,4 @@
-import { collection, addDoc, query, where, onSnapshot, Timestamp } from 'firebase/firestore';
+import { collection, addDoc, query, where, onSnapshot, updateDoc, doc, Timestamp } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { Notification } from '../types/notification';
 
@@ -25,5 +25,10 @@ export const notificationService = {
       })) as Notification[];
       callback(notifications);
     });
+  },
+
+  markAsRead: async (notificationId: string) => {
+    const notificationRef = doc(db, 'notifications', notificationId);
+    await updateDoc(notificationRef, { read: true });
   }
 };

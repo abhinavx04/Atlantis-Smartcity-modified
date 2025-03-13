@@ -11,7 +11,7 @@ import {
   serverTimestamp,
   GeoPoint 
 } from 'firebase/firestore';
-import { RideRequest, RideOffer, RideLocation } from '../types/transportation';
+import { RideRequest, RideOffer, RideLocation, Location } from '../types/transportation';
 
 class TransportationService {
   private ridesCollection = collection(db, 'rides');
@@ -51,8 +51,8 @@ class TransportationService {
   }
 
   async findNearbyRides(
-    pickup: RideLocation,
-    dropoff: RideLocation,
+    pickup: Location,
+    dropoff: Location,
     maxDistance: number = 5 // km
   ): Promise<RideOffer[]> {
     const q = query(
@@ -165,7 +165,15 @@ class TransportationService {
     });
   }
 
-  private isLocationNearby(loc1: RideLocation, loc2: RideLocation, maxDistance: number): boolean {
+  async updateRideStatus(rideId: string, status: 'accepted' | 'rejected' | 'completed'): Promise<void> {
+    const rideRef = doc(this.ridesCollection, rideId);
+    await updateDoc(rideRef, {
+      status,
+      updatedAt: serverTimestamp()
+    });
+  }
+
+  private isLocationNearby(loc1: Location, loc2: Location, maxDistance: number): boolean {
     const R = 6371; // Earth's radius in km
     const lat1 = this.toRad(loc1.latitude);
     const lat2 = this.toRad(loc2.latitude);

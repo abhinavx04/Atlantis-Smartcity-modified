@@ -11,6 +11,8 @@ interface RideBookingModalProps {
 const RideBookingModal: React.FC<RideBookingModalProps> = ({ ride, onClose, onConfirm }) => {
   if (!ride) return null;
 
+  const vehicleDetails = ride.driverProfile.vehicleDetails;
+
   return (
     <AnimatePresence>
       <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center">
@@ -31,13 +33,15 @@ const RideBookingModal: React.FC<RideBookingModalProps> = ({ ride, onClose, onCo
             <div className="flex justify-between items-center">
               <span className="text-gray-400">Vehicle</span>
               <span className="text-white">
-                {ride.driverProfile.vehicleDetails.model} - {ride.driverProfile.vehicleDetails.color}
+                {vehicleDetails ? `${vehicleDetails.model} - ${vehicleDetails.color}` : 'N/A'}
               </span>
             </div>
             
             <div className="flex justify-between items-center">
               <span className="text-gray-400">Vehicle Number</span>
-              <span className="text-white font-mono">{ride.driverProfile.vehicleDetails.number}</span>
+              <span className="text-white font-mono">
+                {vehicleDetails?.number || 'N/A'}
+              </span>
             </div>
             
             <div className="flex justify-between items-center">

@@ -66,8 +66,8 @@ const Transportation: React.FC = () => {
       const user = auth.currentUser;
       if (!user) throw new Error('Not authenticated');
 
-      // Create the ride request
-      const rideRequest = {
+      // Create the ride request with correct types
+      const rideRequest: Omit<RideRequest, 'id'> = {
         userId: user.uid,
         userProfile: {
           name: userName,
@@ -77,17 +77,15 @@ const Transportation: React.FC = () => {
         pickup: ride.route.pickup,
         dropoff: ride.route.dropoff,
         timestamp: new Date(),
-        status: 'pending',
+        status: 'pending' as const, // Fix status type
         fare: ride.fare,
-        paymentStatus: 'pending',
-        rideType: 'carpool'
+        paymentStatus: 'pending' as const,
+        rideType: 'carpool' as const
       };
 
-      await transportationService.createRideRequest(rideRequest);
-
-      // Create notification for the driver
-      await notificationService.createNotification({
-        type: 'RIDE_REQUEST',
+      // Fix departureTime conversion to string
+      const notification = {
+        type: 'RIDE_REQUEST' as const,
         rideId: ride.id,
         fromUserId: user.uid,
         fromUserName: userName,
@@ -97,10 +95,13 @@ const Transportation: React.FC = () => {
           pickup: ride.route.pickup.address,
           dropoff: ride.route.dropoff.address,
           fare: ride.fare,
-          departureTime: ride.departureTime,
+          departureTime: new Date(ride.departureTime).toISOString(),
           passengerName: userName
         }
-      });
+      };
+
+      await transportationService.createRideRequest(rideRequest);
+      await notificationService.createNotification(notification);
 
       setSelectedRide(null);
       alert('Ride request sent successfully!');

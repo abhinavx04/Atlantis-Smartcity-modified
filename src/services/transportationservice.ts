@@ -83,7 +83,7 @@ class TransportationService {
     });
   }
 
-  subscribeToNearbyRides(location: RideLocation, callback: (rides: RideOffer[]) => void) {
+  subscribeToNearbyRides(location: Location, callback: (rides: RideOffer[]) => void) {
     const now = new Date('2025-02-18T10:12:26Z'); // Current system time
     
     const q = query(

@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Landing from './components/Landing';
+import Signup from './components/Signup';
 import Home from './components/Home/Home';
 import Announcement from './components/Announcement/Announcement';
 import Emergency from './components/Emergency/Emergency';
@@ -28,6 +29,7 @@ function App() {
             </div>
           </div>
         } />
+        <Route path="/signup" element={<Signup />} />
         <Route path="/announcements" element={
           <>
             <Announcement />

@@ -6,6 +6,7 @@ import backgroundVideo from '../assets/AdobeStock_303072233.mp4';
 const Landing: React.FC = () => {
   const navigate = useNavigate();
   const [showLogin, setShowLogin] = useState<boolean>(false);
+  const [showCreds, setShowCreds] = useState<boolean>(true);
 
   return (
     <div className="relative min-h-screen w-full overflow-hidden">
@@ -33,6 +34,32 @@ const Landing: React.FC = () => {
           ${showLogin ? 'translate-x-[-25%]' : ''}
         `}
       >
+        {/* Quick Credentials Dropdown */}
+        <div className="absolute top-6 right-6 z-30">
+          <div className="min-w-[260px] rounded-xl border border-white/15 bg-black/50 backdrop-blur-md shadow-xl">
+            <button
+              onClick={() => setShowCreds(!showCreds)}
+              className="w-full flex items-center justify-between px-4 py-3 text-white/90 hover:text-white"
+            >
+              <span className="text-sm tracking-wide">Demo credentials</span>
+              <svg className={`w-4 h-4 transition-transform ${showCreds ? 'rotate-180' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M6 9l6 6 6-6"></path>
+              </svg>
+            </button>
+            {showCreds && (
+              <div className="px-4 pb-4 pt-1 text-sm text-white/80 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-white/60">Email</span>
+                  <code className="bg-white/5 border border-white/10 rounded px-2 py-0.5">admin@gmail.com</code>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-white/60">Password</span>
+                  <code className="bg-white/5 border border-white/10 rounded px-2 py-0.5">admin123</code>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
         {/* Title Section */}
         <div 
           className="text-center mb-16 transform transition-all duration-500 hover:scale-105"
@@ -130,29 +157,6 @@ const Landing: React.FC = () => {
             }}
           >
             Explore
-          </button>
-          
-          <button
-            onClick={() => navigate('/signup')}
-            className="
-              relative px-12 py-5
-              text-white text-base
-              rounded-full
-              transition-all duration-500
-              hover:scale-105
-              focus:outline-none
-              uppercase
-            "
-            style={{
-              background: 'rgba(59, 130, 246, 0.2)',
-              backdropFilter: 'blur(8px)',
-              WebkitBackdropFilter: 'blur(8px)',
-              border: '1px solid rgba(147, 197, 253, 0.3)',
-              letterSpacing: '0.3em',
-              fontWeight: '400',
-            }}
-          >
-            Join Us
           </button>
         </div>
       </div>

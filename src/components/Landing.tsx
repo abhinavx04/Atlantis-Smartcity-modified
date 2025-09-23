@@ -2,7 +2,6 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Login from './Login';
 import backgroundVideo from '../assets/AdobeStock_303072233.mp4';
-import posterImage from '../assets/home_bgk.avif';
 
 const Landing: React.FC = () => {
   const navigate = useNavigate();
@@ -11,8 +10,8 @@ const Landing: React.FC = () => {
 
   return (
     <div className="relative min-h-screen w-full overflow-hidden">
-      {/* Background Video with instant poster and deferred source */}
-      <LandingBackgroundVideo poster={posterImage} src={backgroundVideo} />
+      {/* Background Video: immediate source for fastest start */}
+      <LandingBackgroundVideo src={backgroundVideo} />
 
       {/* Subtle Overlay */}
       <div className="absolute inset-0 bg-black/20 z-10"></div>
@@ -192,25 +191,25 @@ const Landing: React.FC = () => {
 
 export default Landing;
 
-// Lightweight background video component with poster-first render
-const LandingBackgroundVideo: React.FC<{ poster: string; src: string }> = ({ poster, src }) => {
+// Background video that starts buffering immediately
+const LandingBackgroundVideo: React.FC<{ src: string }> = ({ src }) => {
   const videoRef = useRef<HTMLVideoElement | null>(null);
-  const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    const timeout = setTimeout(() => {
-      if (videoRef.current && !ready) {
-        // Attach source only after first paint to avoid blocking
-        const sourceEl = document.createElement('source');
-        sourceEl.src = src;
-        sourceEl.type = 'video/mp4';
-        videoRef.current.appendChild(sourceEl);
-        videoRef.current.load();
-      }
-    }, 0);
-
-    return () => clearTimeout(timeout);
-  }, [src, ready]);
+    // Ensure playback kicks off as soon as possible
+    const v = videoRef.current;
+    if (!v) return;
+    const tryPlay = () => {
+      v.play().catch(() => {});
+    };
+    v.addEventListener('canplay', tryPlay, { once: true });
+    v.addEventListener('canplaythrough', tryPlay, { once: true });
+    tryPlay();
+    return () => {
+      v.removeEventListener('canplay', tryPlay);
+      v.removeEventListener('canplaythrough', tryPlay);
+    };
+  }, []);
 
   return (
     <video
@@ -219,10 +218,11 @@ const LandingBackgroundVideo: React.FC<{ poster: string; src: string }> = ({ pos
       loop
       muted
       playsInline
-      poster={poster}
+      preload="auto"
       className="absolute top-0 left-0 min-h-screen w-full object-cover z-0"
       style={{ filter: 'brightness(0.9)' }}
-      onCanPlayThrough={() => setReady(true)}
-    />
+    >
+      <source src={src} type="video/mp4" />
+    </video>
   );
 };

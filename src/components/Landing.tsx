@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Login from './Login';
 import backgroundVideo from '../assets/AdobeStock_303072233.mp4';
+import posterImage from '../assets/home_bgk.avif';
 
 const Landing: React.FC = () => {
   const navigate = useNavigate();
@@ -10,17 +11,8 @@ const Landing: React.FC = () => {
 
   return (
     <div className="relative min-h-screen w-full overflow-hidden">
-      {/* Background Video */}
-      <video
-        autoPlay
-        loop
-        muted
-        playsInline
-        className="absolute top-0 left-0 min-h-screen w-full object-cover z-0"
-        style={{ filter: 'brightness(0.9)' }}
-      >
-        <source src={backgroundVideo} type="video/mp4" />
-      </video>
+      {/* Background Video with instant poster and deferred source */}
+      <LandingBackgroundVideo poster={posterImage} src={backgroundVideo} />
 
       {/* Subtle Overlay */}
       <div className="absolute inset-0 bg-black/20 z-10"></div>
@@ -199,3 +191,38 @@ const Landing: React.FC = () => {
 };
 
 export default Landing;
+
+// Lightweight background video component with poster-first render
+const LandingBackgroundVideo: React.FC<{ poster: string; src: string }> = ({ poster, src }) => {
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      if (videoRef.current && !ready) {
+        // Attach source only after first paint to avoid blocking
+        const sourceEl = document.createElement('source');
+        sourceEl.src = src;
+        sourceEl.type = 'video/mp4';
+        videoRef.current.appendChild(sourceEl);
+        videoRef.current.load();
+      }
+    }, 0);
+
+    return () => clearTimeout(timeout);
+  }, [src, ready]);
+
+  return (
+    <video
+      ref={videoRef}
+      autoPlay
+      loop
+      muted
+      playsInline
+      poster={poster}
+      className="absolute top-0 left-0 min-h-screen w-full object-cover z-0"
+      style={{ filter: 'brightness(0.9)' }}
+      onCanPlayThrough={() => setReady(true)}
+    />
+  );
+};

@@ -34,6 +34,26 @@
 
 ## 🚀 Key Features
 
+### 📸 Application Gallery
+
+<details>
+<summary><b>Click to View Screenshots</b></summary>
+<br>
+
+| Login Portal | Main Dashboard |
+| :---: | :---: |
+| <img src="./public/screenshots/login.png" width="400"/> | <img src="./public/screenshots/dashboard.png" width="400"/> |
+
+| Emergency Services & AI | Emergency Guidelines |
+| :---: | :---: |
+| <img src="./public/screenshots/emergency-map.png" width="400"/> | <img src="./public/screenshots/emergency-guidelines.png" width="400"/> |
+
+| Smart Transportation & P2P Rides |
+| :---: |
+| <img src="./public/screenshots/transportation.png" width="600"/> |
+
+</details>
+
 * **🤖 AI-Powered Assistant (Sudama):** Context-aware chatbot utilizing **Gemini AI** and **HuggingFace** for intelligent intent recognition. It guides users through municipal services and automatically routes critical "SOS" commands to emergency dispatch flows.
 * **🚗 Smart Transportation (P2P Ride-Sharing):** A real-time peer-to-peer ride-sharing network powered by **Socket.io**, allowing sub-second synchronization for location-based driver matching and ride requests via the **Google Maps API**.
 * **🗳️ E-Voting Dashboard:** A decentralized portal for citizens to raise, discuss, and vote on active city issues. Top-voted issues are seamlessly escalated for municipal review.

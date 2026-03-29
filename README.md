@@ -1,5 +1,5 @@
 <div align="center">
-  <h1>🏙️ Atlantis - Smart City Management Platform</h1>
+  <h1>🏙️ DWARKA - Smart City Management Platform</h1>
   <p>A comprehensive, real-time Smart City web application designed to enhance citizen-municipal connectivity, streamline public services, and foster community engagement.</p>
 
   <!-- Badges -->
